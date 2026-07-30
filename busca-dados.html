@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca Profissional de Informações - Serviço Especializado 🔍</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #ffffff; }
+        .form-card { background: #18181b; border: 1px solid rgba(255,255,255,0.05); border-radius: 2rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .input-field { 
+            background: #09090b; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: white; 
+            padding: 1rem; 
+            border-radius: 12px; 
+            width: 100%; 
+            outline: none; 
+            transition: all 0.3s; 
+        }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59,130,246,0.1); }
+        .btn-blue { 
+            background: #2563eb; 
+            color: white; 
+            font-weight: 900; 
+            padding: 1.25rem; 
+            border-radius: 12px; 
+            width: 100%; 
+            transition: all 0.3s; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-blue:hover { background: #3b82f6; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37,99,235,0.2); }
+        .loading-spinner { border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Loader -->
+    <div id="global-loader" class="fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-500">
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full z-[100] bg-black/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 group">
+                <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center border border-blue-500/20 group-hover:rotate-12 transition-transform">
+                    <div id="logo-placeholder" class="text-white font-black">L</div>
+                    <div id="logo-loader" class="hidden absolute inset-0 border-2 border-t-blue-500 border-white/10 rounded-xl animate-spin"></div>
+                    <img id="logo-img" class="hidden absolute inset-0 w-full h-full object-cover" alt="LESTEK Logo">
+                </div>
+                <span class="font-black tracking-tighter text-2xl text-white site-name">LESTEK</span>
+            </a>
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="/" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Home</a>
+                <a href="/busca-dados.html" class="text-xs font-bold uppercase tracking-widest text-white transition-colors">Busca de Dados</a>
+                <a href="/produtos.html" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Produtos</a>
+                <a href="https://wa.me/5577999587570" target="_blank" class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link">Contato</a>
+            </nav>
+            <button id="mobile-menu-btn" class="md:hidden text-white p-2 focus:outline-none z-[110] relative">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[105] flex flex-col items-center justify-center gap-8 transition-all duration-300 opacity-0 pointer-events-none">
+        <a href="/" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Home</a>
+        <a href="/busca-dados.html" class="text-2xl font-black uppercase tracking-widest text-white hover:text-blue-500 transition-colors mobile-link">Busca de Dados</a>
+        <a href="/produtos.html" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Produtos</a>
+        <a href="https://wa.me/5577999587570" target="_blank" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Contato</a>
+    </div>
+
+    <main class="flex-grow pt-40 pb-20 px-6">
+        <div class="max-w-xl mx-auto">
+            <div id="form-container" class="glass-card p-8 md:p-12 rounded-[2.5rem]">
+                <div class="mb-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                        <span data-config-key="search_hero_badge" class="text-[10px] font-black uppercase tracking-widest text-blue-500">Sistema de Busca</span>
+                    </div>
+                    <h1 data-config-key="search_hero_title" class="text-3xl font-black tracking-tighter text-white uppercase mb-2 glow-text">BUSCA DE DADOS AVANÇADA</h1>
+                    <p data-config-key="search_hero_subtitle" class="text-zinc-500 text-sm font-medium">Localização de informações com precisão cirúrgica. Preencha o formulário abaixo para iniciar a análise profissional.</p>
+                </div>
+                <form id="search-form" onsubmit="handleSubmit(event)" class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">SEU Nome Completo</label>
+                        <input type="text" id="nome" class="input-field" placeholder="Ex: João Silva Santos">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">SEU E-mail</label>
+                            <input type="email" id="email" class="input-field" placeholder="seu@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">SEU WhatsApp</label>
+                            <input type="tel" id="whatsapp" required class="input-field border-blue-500/30" placeholder="(77) 99999-9999">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">O que você JÁ SABE?</label>
+                        <select id="dados-conhecidos" class="input-field appearance-none">
+                            <option value="">Selecione...</option>
+                            <option value="CPF">CPF</option>
+                            <option value="RG">RG</option>
+                            <option value="Placa">Placa de Carro</option>
+                            <option value="Telefone">Telefone</option>
+                            <option value="Endereço">Endereço</option>
+                            <option value="Empresa">Empresa</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">Informações Conhecidas</label>
+                        <textarea id="info-conhecida" class="input-field h-24 resize-none" placeholder="Ex: João Silva, telefone 1199999-9999"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-zinc-500 mb-4 tracking-widest">Dados Necessários:</label>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <label class="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/5 cursor-pointer hover:border-blue-500/50 transition-all">
+                                <input type="checkbox" name="necessidade" value="CPF/RG" class="w-4 h-4 rounded border-white/10 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                                <span class="text-[10px] text-zinc-300 font-black uppercase tracking-tighter">CPF/RG</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/5 cursor-pointer hover:border-blue-500/50 transition-all">
+                                <input type="checkbox" name="necessidade" value="Endereço" class="w-4 h-4 rounded border-white/10 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                                <span class="text-[10px] text-zinc-300 font-black uppercase tracking-tighter">Endereço</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/5 cursor-pointer hover:border-blue-500/50 transition-all">
+                                <input type="checkbox" name="necessidade" value="Parentes" class="w-4 h-4 rounded border-white/10 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                                <span class="text-[10px] text-zinc-300 font-black uppercase tracking-tighter">Parentes</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/5 cursor-pointer hover:border-blue-500/50 transition-all">
+                                <input type="checkbox" name="necessidade" value="Processos" class="w-4 h-4 rounded border-white/10 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                                <span class="text-[10px] text-zinc-300 font-black uppercase tracking-tighter">Processos</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/5 cursor-pointer hover:border-blue-500/50 transition-all">
+                                <input type="checkbox" name="necessidade" value="Veículos" class="w-4 h-4 rounded border-white/10 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                                <span class="text-[10px] text-zinc-300 font-black uppercase tracking-tighter">Veículos</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 bg-black/30 rounded-xl border border-white/5 cursor-pointer hover:border-blue-500/50 transition-all">
+                                <input type="checkbox" id="outros-check" name="necessidade" value="Outros" class="w-4 h-4 rounded border-white/10 bg-zinc-800 text-blue-600 focus:ring-blue-500">
+                                <span class="text-[10px] text-zinc-300 font-black uppercase tracking-tighter">Outros</span>
+                            </label>
+                        </div>
+                        <input type="text" id="outros-texto" class="input-field hidden mt-4" placeholder="Especifique o que você precisa...">
+                    </div>
+
+                    <p data-config-key="search_privacy" class="text-[9px] text-zinc-600 italic leading-tight">
+                        ⚖️ Disclaimer Legal: Este serviço cumpre integralmente a LGPD. Fornecemos apenas dados de fontes públicas e registros legais.
+                    </p>
+
+                    <button type="submit" class="btn-blue">
+                        <span data-config-key="search_btn">Solicitar Análise Profissional</span>
+                    </button>
+                </form>
+            </div>
+
+            <div id="success-container" class="hidden form-card p-12 text-center">
+                <div class="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl">✓</div>
+                <h2 class="text-2xl font-black mb-4 tracking-tighter uppercase">Dados Enviados!</h2>
+                <p class="text-zinc-400 mb-8 text-sm">Sua análise profissional foi iniciada. Entraremos em contato via WhatsApp em até 24h.</p>
+                <button onclick="location.reload()" class="text-blue-500 font-black text-xs uppercase tracking-widest hover:underline">Fazer Nova Consulta</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-12 border-t border-white/5 text-center bg-black/20">
+        <div class="max-w-7xl mx-auto px-6">
+            <p class="text-zinc-500 text-xs mb-4 font-medium">Suporte Técnico: <span data-config-key="whatsapp">(77) 999587570</span> | Atendimento 24h</p>
+            <p class="text-zinc-600 text-[10px] uppercase tracking-[0.3em]"><a href="/admin.html" class="hover:text-blue-500 transition-colors">&copy;</a> 2026 <span class="site-name">LESTEK</span> - TODOS OS DIREITOS RESERVADOS</p>
+        </div>
+    </footer>
+
+    <script src="/src/main.js" type="module"></script>
+    <script>
+        document.getElementById('outros-check').addEventListener('change', function(e) {
+            const outrosTexto = document.getElementById('outros-texto');
+            if (e.target.checked) {
+                outrosTexto.classList.remove('hidden');
+            } else {
+                outrosTexto.classList.add('hidden');
+            }
+        });
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            const container = document.getElementById('form-container');
+            const success = document.getElementById('success-container');
+
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const conhecido = document.getElementById('dados-conhecidos').value;
+            const infoConhecida = document.getElementById('info-conhecida').value;
+            
+            const necessidades = Array.from(document.querySelectorAll('input[name="necessidade"]:checked')).map(cb => cb.value);
+            const outrosTexto = document.getElementById('outros-texto').value;
+            
+            if (necessidades.includes('Outros') && outrosTexto) {
+                necessidades[necessidades.indexOf('Outros')] = `Outros (${outrosTexto})`;
+            }
+
+            let message = `*NOVA SOLICITAÇÃO DE BUSCA DE DADOS* 🔍\n\n`;
+            message += `*Nome:* ${nome}\n`;
+            message += `*E-mail:* ${email}\n`;
+            message += `*WhatsApp:* ${whatsapp}\n\n`;
+            message += `*O que já sabe:* ${conhecido || 'Não informado'}\n`;
+            message += `*Informações conhecidas:* ${infoConhecida || 'Nenhuma'}\n\n`;
+            message += `*Dados Necessários:* ${necessidades.length > 0 ? necessidades.join(', ') : 'Nenhum selecionado'}`;
+
+            let baseUrl = window.getWhatsAppLink ? window.getWhatsAppLink() : 'https://wa.me/5577999587570';
+            // Ensure we append the text parameter correctly
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            const whatsappUrl = `${baseUrl}${separator}text=${encodeURIComponent(message)}`;
+            
+            window.open(whatsappUrl, '_blank');
+
+            container.classList.add('hidden');
+            success.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos | LESTEK</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="tech-grid">
+    <!-- Loader -->
+    <div id="global-loader" class="fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-500">
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full z-[100] bg-black/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 group">
+                <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center border border-blue-500/20 group-hover:rotate-12 transition-transform">
+                    <div id="logo-placeholder" class="text-white font-black">L</div>
+                    <div id="logo-loader" class="hidden absolute inset-0 border-2 border-t-blue-500 border-white/10 rounded-xl animate-spin"></div>
+                    <img id="logo-img" class="hidden absolute inset-0 w-full h-full object-cover" alt="LESTEK Logo">
+                </div>
+                <span class="font-black tracking-tighter text-2xl text-white site-name">LESTEK</span>
+            </a>
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="/" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Home</a>
+                <a href="/produtos.html" class="text-xs font-bold uppercase tracking-widest text-white transition-colors">Produtos</a>
+                <a href="https://wa.me/5577999587570" target="_blank" class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link">Suporte</a>
+            </nav>
+            <button id="mobile-menu-btn" class="md:hidden text-white p-2 focus:outline-none z-[110] relative">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[105] flex flex-col items-center justify-center gap-8 transition-all duration-300 opacity-0 pointer-events-none">
+        <a href="/" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Home</a>
+        <a href="/busca-dados.html" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Busca de Dados</a>
+        <a href="/produtos.html" class="text-2xl font-black uppercase tracking-widest text-white hover:text-blue-500 transition-colors mobile-link">Produtos</a>
+        <a href="https://wa.me/5577999587570" target="_blank" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Suporte</a>
+    </div>
+
+    <main class="pt-40 pb-20">
+        <!-- Hero -->
+        <section class="container mx-auto px-6 text-center mb-32">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-8">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <span data-config-key="ebooks_hero_badge" class="text-[10px] font-black uppercase tracking-widest text-blue-500">Conteúdo de Alta Performance</span>
+            </div>
+            <h1 data-config-key="ebooks_hero_title" class="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.85] uppercase mb-8 glow-text">
+                NOSSOS <br><span class="text-blue-500">PRODUTOS</span>
+            </h1>
+            <p data-config-key="ebooks_hero_subtitle" class="text-xl md:text-2xl text-zinc-400 max-w-2xl mx-auto font-medium leading-relaxed">
+                Soluções de alta performance para o seu setup e dia a dia.
+            </p>
+        </section>
+
+        <!-- E-books Grid -->
+        <section class="container mx-auto px-6 mb-32">
+            <div id="ebooks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                <!-- Injected by JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-20 px-6 border-t border-white/5 text-center">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col items-center gap-6">
+                <div class="flex items-center">
+                    <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center border border-blue-500/20">
+                        <div id="logo-placeholder-footer" class="text-white font-black">L</div>
+                        <img id="logo-img-footer" class="hidden absolute inset-0 w-full h-full object-cover" alt="LESTEK Logo">
+                    </div>
+                    <span class="ml-3 text-xl font-black tracking-tighter text-white site-name">LESTEK</span>
+                </div>
+                <p class="text-zinc-500 text-sm max-w-md">Especialista em hardware e performance. Atendimento personalizado para quem busca o máximo de tecnologia.</p>
+                <div class="mt-12 pt-12 border-t border-white/5 w-full text-zinc-600 text-[10px] uppercase tracking-widest">
+                    <a href="/admin.html" class="hover:text-blue-500 transition-colors">&copy;</a> 2026 <span class="site-name">LESTEK</span>. Todos os direitos reservados.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
