@@ -108,7 +108,7 @@ export async function updateSiteContent(section, content, image_url = undefined)
     await setDoc(docRef, firestorePayload, { merge: true });
   } catch (error) {
     console.error(`Error updating ${section}:`, error);
-    // If permission fails, local fallback is already stored
+    throw new Error("Erro de permissão no Firebase. As edições foram salvas apenas localmente. Acesse as regras do Firestore e ative a permissão de leitura/gravação: " + error.message);
   }
 }
 
@@ -132,6 +132,7 @@ export async function saveService(service) {
     await setDoc(docRef, service, { merge: true });
   } catch (error) {
     console.error("Error saving service:", error);
+    throw new Error("Erro de permissão no Firebase: " + error.message);
   }
 }
 
@@ -145,6 +146,7 @@ export async function deleteService(id) {
     await deleteDoc(doc(db, 'services', id));
   } catch (error) {
     console.error("Error deleting service:", error);
+    throw new Error("Erro de permissão no Firebase: " + error.message);
   }
 }
 
@@ -168,6 +170,7 @@ export async function saveProduct(product) {
     await setDoc(docRef, product, { merge: true });
   } catch (error) {
     console.error("Error saving product:", error);
+    throw new Error("Erro de permissão no Firebase: " + error.message);
   }
 }
 
@@ -181,6 +184,7 @@ export async function deleteProduct(id) {
     await deleteDoc(doc(db, 'products', id));
   } catch (error) {
     console.error("Error deleting product:", error);
+    throw new Error("Erro de permissão no Firebase: " + error.message);
   }
 }
 
