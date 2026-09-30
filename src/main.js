@@ -1,5 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
 import { fetchSiteContent, fetchServices, fetchProducts, isConfigured } from "./db.js";
+import { initAetherBackground } from "./lib/animations/aether-background.js";
+import { escapeHtml, sanitizeHtml, sanitizeUrl } from "./lib/security.js";
 
 const WHATSAPP_LINK_DEFAULT = "https://wa.me/5577999587570";
 
@@ -96,39 +97,14 @@ window.getWhatsAppMessageLink = function(message) {
   return `${baseUrl}${separator}text=${encodeURIComponent(message)}`;
 };
 
-async function generateLogo() {
+function generateLogo() {
   const logoImg = document.getElementById('logo-img');
   const loader = document.getElementById('logo-loader');
   const placeholder = document.getElementById('logo-placeholder');
 
-  if (loader) loader.classList.remove('hidden');
-  if (placeholder) placeholder.classList.add('hidden');
+  if (loader) loader.classList.add('hidden');
+  if (placeholder) placeholder.classList.remove('hidden');
   if (logoImg) logoImg.classList.add('hidden');
-
-  try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("API Key missing");
-
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [{ text: "A high-end, professional tech logo for 'LESTEK'. Futuristic, minimalist, electric blue and silver. Dark background." }]
-      },
-      config: { imageConfig: { aspectRatio: "1:1" } }
-    });
-
-    const part = response.candidates[0].content.parts.find(p => p.inlineData);
-    if (part) {
-      const base64 = `data:image/png;base64,${part.inlineData.data}`;
-      localStorage.setItem('lestek_logo_v2', base64);
-      renderLogo(base64);
-    }
-  } catch (error) {
-    console.log("Image generation error (this is expected if Gemini API key lacks Imagen access or is invalid). Falling back to placeholder.", error.message || error);
-    if (loader) loader.classList.add('hidden');
-    if (placeholder) placeholder.classList.remove('hidden');
-  }
 }
 
 function renderLogo(url) {
@@ -191,46 +167,51 @@ function loadSiteConfig() {
   
   // Site Name
   if (config.site_name) {
-    document.querySelectorAll('.site-name').forEach(el => el.innerText = config.site_name);
-    document.title = config.site_name + " | Soluções Digitais";
+    document.querySelectorAll('.site-name').forEach(el => el.textContent = config.site_name);
+    document.title = escapeHtml(config.site_name) + " | Soluções Digitais";
   }
   
   // Hero Section
   if (config.hero_title) {
     const heroTitle = document.getElementById('hero-title');
-    if (heroTitle) heroTitle.innerHTML = config.hero_title;
+    if (heroTitle) heroTitle.innerHTML = sanitizeHtml(config.hero_title);
   }
   if (config.hero_subtitle) {
     const heroSub = document.getElementById('hero-subtitle');
-    if (heroSub) heroSub.innerText = config.hero_subtitle;
+    if (heroSub) heroSub.textContent = config.hero_subtitle;
   }
   
   // Instagram Links
   if (config.instagram) {
-    const instaLink = `https://instagram.com/${config.instagram}`;
+    const instaLink = sanitizeUrl(`https://instagram.com/${config.instagram}`);
     document.querySelectorAll('a[href*="instagram.com"]').forEach(el => el.href = instaLink);
   }
 
   // Contact Links
-  const contactUrl = getWhatsAppLink();
+  const contactUrl = sanitizeUrl(getWhatsAppLink());
   document.querySelectorAll('.contact-link').forEach(el => el.href = contactUrl);
   document.querySelectorAll('.wa-link').forEach(el => el.href = contactUrl);
 
-  // Generic Data Config Keys
+  // Generic Data Config Keys - formatted keys get sanitized HTML, others get textContent
+  const formattedHtmlKeys = new Set(['hero_title', 'cta_title', 'solutions_title', 'services_title', 'ebooks_hero_title']);
   document.querySelectorAll('[data-config-key]').forEach(el => {
     const key = el.dataset.configKey;
     if (config[key]) {
-      el.innerHTML = config[key];
+      if (formattedHtmlKeys.has(key)) {
+        el.innerHTML = sanitizeHtml(config[key]);
+      } else {
+        el.textContent = config[key];
+      }
     }
   });
 
   // Pix Logic (for ebooks page)
   const pixKeyDisplay = document.getElementById('pix-key-display');
   if (pixKeyDisplay) {
-    pixKeyDisplay.innerText = config.pix_key;
+    pixKeyDisplay.textContent = config.pix_key;
     const pixPayload = `00020101021126580014br.gov.bcb.pix0114${config.pix_key}5204000053039865802BR59${(config.pix_name || '').length.toString().padStart(2, '0')}${config.pix_name}60${(config.pix_city || '').length.toString().padStart(2, '0')}${config.pix_city}62070503***6304`;
     const qrImg = document.getElementById('pix-qr');
-    if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixPayload)}`;
+    if (qrImg) qrImg.src = sanitizeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixPayload)}`);
   }
 }
 
@@ -243,16 +224,23 @@ function renderServices() {
     services.forEach(service => {
       const card = document.createElement('div');
       card.className = "group relative p-8 rounded-3xl glass-card hover:border-blue-500/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10";
+      
+      const safeIcon = escapeHtml(service.icon || '🚀');
+      const safeTitle = escapeHtml(service.title);
+      const safeDesc = escapeHtml(service.description);
+      const safeBtnText = escapeHtml(config.services_btn || defaultConfig.services_btn);
+      const safeWhatsAppUrl = sanitizeUrl(window.getWhatsAppMessageLink(`Olá! Gostaria de saber mais sobre o serviço: *${service.title}*`));
+
       card.innerHTML = `
         <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
         <div class="relative z-10">
           <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-8 group-hover:scale-110 transition-transform text-3xl">
-            ${service.icon}
+            ${safeIcon}
           </div>
-          <h3 class="text-2xl font-black mb-4 text-white uppercase tracking-tighter">${service.title}</h3>
-          <p class="text-zinc-400 text-sm leading-relaxed mb-8 font-medium">${service.description}</p>
-          <button onclick="window.open(window.getWhatsAppMessageLink('Olá! Gostaria de saber mais sobre o serviço: *${service.title}*'), '_blank')" class="flex items-center text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors">
-            ${config.services_btn || defaultConfig.services_btn}
+          <h3 class="text-2xl font-black mb-4 text-white uppercase tracking-tighter">${safeTitle}</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed mb-8 font-medium">${safeDesc}</p>
+          <button onclick="window.open('${safeWhatsAppUrl}', '_blank')" class="flex items-center text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors cursor-pointer">
+            ${safeBtnText}
             <svg class="ml-2 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </div>
@@ -281,7 +269,6 @@ function renderEbooks() {
             const isFeatured = featuredProducts.includes(ebook.id);
             const card = document.createElement('div');
             
-            // Add special classes if featured
             let cardClasses = 'group relative glass-card rounded-[2.5rem] overflow-hidden hover:border-blue-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col';
             if (isFeatured) {
                 cardClasses += ' md:col-span-2 lg:col-span-2 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.15)] md:flex-row';
@@ -289,6 +276,15 @@ function renderEbooks() {
             
             card.className = cardClasses;
             
+            const safeTitle = escapeHtml(ebook.title);
+            const safeDesc = escapeHtml(ebook.description || 'Produto exclusivo de alta performance.');
+            const safePrice = escapeHtml(ebook.price);
+            const safeImage = sanitizeUrl(ebook.image, 'https://picsum.photos/seed/ebook/600/800');
+            const targetUrl = (ebook.link && ebook.link !== '#') 
+                ? sanitizeUrl(ebook.link) 
+                : sanitizeUrl(window.getWhatsAppMessageLink(`Olá! Tenho interesse no produto: *${ebook.title}*`));
+            const safeBtnText = escapeHtml(config.produtos_btn || defaultConfig.produtos_btn);
+
             let innerHTML = '';
             
             if (isFeatured) {
@@ -299,17 +295,17 @@ function renderEbooks() {
                     <div class="w-full md:w-1/2 aspect-[4/3] md:aspect-auto overflow-hidden relative">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#18181b] to-transparent z-10 md:hidden"></div>
                         <div class="absolute inset-0 bg-gradient-to-r from-[#18181b] to-transparent z-10 hidden md:block"></div>
-                        <img src="${ebook.image}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://picsum.photos/seed/ebook/600/800'">
+                        <img src="${safeImage}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://picsum.photos/seed/ebook/600/800'">
                     </div>
                     <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative z-20">
-                        <h3 class="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">${ebook.title}</h3>
-                        <p class="text-zinc-400 text-sm mb-8 leading-relaxed">${ebook.description || 'Produto exclusivo de alta performance.'}</p>
+                        <h3 class="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">${safeTitle}</h3>
+                        <p class="text-zinc-400 text-sm mb-8 leading-relaxed">${safeDesc}</p>
                         <div class="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
                             <div>
                                 <span class="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Investimento</span>
-                                <span class="text-3xl font-black text-yellow-500 tracking-tighter">R$ ${ebook.price}</span>
+                                <span class="text-3xl font-black text-yellow-500 tracking-tighter">R$ ${safePrice}</span>
                             </div>
-                            <a href="${ebook.link && ebook.link !== '#' ? ebook.link : window.getWhatsAppMessageLink('Olá! Tenho interesse no produto destaque: *' + ebook.title + '*')}" target="_blank" class="px-8 py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20">${config.produtos_btn || defaultConfig.produtos_btn}</a>
+                            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-8 py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20">${safeBtnText}</a>
                         </div>
                     </div>
                 `;
@@ -317,16 +313,16 @@ function renderEbooks() {
                 innerHTML = `
                     <div class="aspect-[3/4] overflow-hidden relative">
                         <div class="absolute inset-0 bg-gradient-to-t from-[#18181b] to-transparent z-10"></div>
-                        <img src="${ebook.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.src='https://picsum.photos/seed/ebook/600/800'">
+                        <img src="${safeImage}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.src='https://picsum.photos/seed/ebook/600/800'">
                     </div>
                     <div class="p-8 relative z-20 flex-1 flex flex-col">
-                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter mb-6">${ebook.title}</h3>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter mb-6">${safeTitle}</h3>
                         <div class="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
                             <div>
                                 <span class="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Investimento</span>
-                                <span class="text-2xl font-black text-blue-500 tracking-tighter">R$ ${ebook.price}</span>
+                                <span class="text-2xl font-black text-blue-500 tracking-tighter">R$ ${safePrice}</span>
                             </div>
-                            <a href="${ebook.link && ebook.link !== '#' ? ebook.link : window.getWhatsAppMessageLink('Olá! Tenho interesse no produto: *' + ebook.title + '*')}" target="_blank" class="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-blue-600 hover:text-white transition-all">${config.produtos_btn || defaultConfig.produtos_btn}</a>
+                            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-blue-600 hover:text-white transition-all">${safeBtnText}</a>
                         </div>
                     </div>
                 `;
@@ -344,25 +340,37 @@ function initMobileMenu() {
     const links = document.querySelectorAll('.mobile-link');
 
     if (btn && menu) {
+        const closeMenu = () => {
+            menu.classList.remove('opacity-100', 'pointer-events-auto');
+            menu.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('overflow-hidden');
+            btn.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>';
+        };
+
+        const openMenu = () => {
+            menu.classList.remove('opacity-0', 'pointer-events-none');
+            menu.classList.add('opacity-100', 'pointer-events-auto');
+            document.body.classList.add('overflow-hidden');
+            btn.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+        };
+
         btn.addEventListener('click', () => {
             const isOpen = menu.classList.contains('opacity-100');
             if (isOpen) {
-                menu.classList.remove('opacity-100', 'pointer-events-auto');
-                menu.classList.add('opacity-0', 'pointer-events-none');
-                btn.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>';
+                closeMenu();
             } else {
-                menu.classList.remove('opacity-0', 'pointer-events-none');
-                menu.classList.add('opacity-100', 'pointer-events-auto');
-                btn.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                openMenu();
             }
         });
 
         links.forEach(link => {
-            link.addEventListener('click', () => {
-                menu.classList.remove('opacity-100', 'pointer-events-auto');
-                menu.classList.add('opacity-0', 'pointer-events-none');
-                btn.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>';
-            });
+            link.addEventListener('click', closeMenu);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && menu.classList.contains('opacity-100')) {
+                closeMenu();
+            }
         });
     }
 }
@@ -370,8 +378,10 @@ function initMobileMenu() {
 async function init() {
   // Expose helpers to window for inline onclicks
   window.getWhatsAppLink = getWhatsAppLink;
+  window.initAetherBackground = initAetherBackground;
 
   initMobileMenu();
+  initAetherBackground();
 
   // Initial render with default config to prevent blank screen/delay
   currentConfig = { ...defaultConfig };

@@ -7,7 +7,6 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [tailwindcss()],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       ...Object.keys(env).reduce((prev, key) => {
         if (key.startsWith('VITE_')) {
           prev[`import.meta.env.${key}`] = JSON.stringify(env[key]);

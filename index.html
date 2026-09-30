@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>LESTEK - High Performance Computing</title>
     <link rel="stylesheet" href="/src/style.css">
 </head>
-<body class="tech-grid">
+<body class="tech-grid relative">
+    <!-- Interactive Aether Flow Background Canvas -->
+    <canvas id="aether-flow-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0" aria-hidden="true"></canvas>
+
     <!-- Loader -->
     <div id="global-loader" class="fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-500">
         <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -42,7 +46,7 @@
         <a href="https://wa.me/5577999587570" target="_blank" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Contato</a>
     </div>
 
-    <main id="sections-container" class="flex flex-col">
+    <main id="sections-container" class="flex flex-col relative z-10">
     <!-- Hero Section -->
     <section id="section-hero" class="relative min-h-screen flex items-center pt-20 overflow-hidden">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#3b82f620,transparent_50%)]"></div>
@@ -79,8 +83,8 @@
     </section>
 
     <!-- Solutions Section -->
-    <section id="section-solutions" class="py-20 md:py-32 px-4 sm:px-6 bg-zinc-950 border-y border-white/5 relative">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,#3b82f605,transparent_50%)]"></div>
+    <section id="section-solutions" class="py-20 md:py-32 px-4 sm:px-6 bg-zinc-950/80 backdrop-blur-[2px] border-y border-white/5 relative">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,#3b82f608,transparent_50%)]"></div>
         <div class="max-w-7xl mx-auto relative z-10">
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-20 gap-6 md:gap-8">
                 <div>
@@ -91,17 +95,17 @@
             </div>
             <div class="grid md:grid-cols-2 gap-6 md:gap-8">
                 <!-- Card 1 -->
-                <a href="/busca-dados.html" class="group p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] bg-zinc-900 border border-white/5 hover:border-blue-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10">
+                <a href="/busca-dados.html" class="group p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] bg-zinc-900/90 border border-white/10 hover:border-blue-500/50 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/15">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 text-2xl sm:text-3xl group-hover:scale-110 transition-transform text-blue-500">🔍</div>
                     <h4 data-config-key="solutions_card1_title" class="text-xl sm:text-2xl font-black text-white mb-4 uppercase tracking-tighter">Busca Profissional</h4>
-                    <p data-config-key="solutions_card1_desc" class="text-zinc-500 text-sm mb-6 sm:mb-8 leading-relaxed">Serviço especializado de localização de informações e dados públicos com precisão cirúrgica.</p>
+                    <p data-config-key="solutions_card1_desc" class="text-zinc-400 text-sm mb-6 sm:mb-8 leading-relaxed font-medium">Serviço especializado de localização de informações e dados públicos com precisão cirúrgica.</p>
                     <span data-config-key="solutions_card1_btn" class="text-[10px] font-black uppercase tracking-widest text-blue-500 group-hover:translate-x-2 transition-transform inline-block">Solicitar Análise →</span>
                 </a>
                 <!-- Card 2 -->
-                <a href="/produtos.html" class="group p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] bg-zinc-900 border border-white/5 hover:border-blue-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10">
+                <a href="/produtos.html" class="group p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] bg-zinc-900/90 border border-white/10 hover:border-blue-500/50 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/15">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 text-2xl sm:text-3xl group-hover:scale-110 transition-transform text-emerald-500">📦</div>
                     <h4 data-config-key="solutions_card2_title" class="text-xl sm:text-2xl font-black text-white mb-4 uppercase tracking-tighter">Produtos</h4>
-                    <p data-config-key="solutions_card2_desc" class="text-zinc-500 text-sm mb-6 sm:mb-8 leading-relaxed">Conheça nossos produtos exclusivos de alta performance e tecnologia.</p>
+                    <p data-config-key="solutions_card2_desc" class="text-zinc-400 text-sm mb-6 sm:mb-8 leading-relaxed font-medium">Conheça nossos produtos exclusivos de alta performance e tecnologia.</p>
                     <span data-config-key="solutions_card2_btn" class="text-[10px] font-black uppercase tracking-widest text-blue-500 group-hover:translate-x-2 transition-transform inline-block">Ver Produtos →</span>
                 </a>
             </div>
@@ -109,7 +113,7 @@
     </section>
 
     <!-- Services Section -->
-    <section id="section-services" class="py-20 md:py-32 bg-black relative">
+    <section id="section-services" class="py-20 md:py-32 bg-black/75 backdrop-blur-[2px] relative">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-20 gap-6 md:gap-8">
                 <div>
@@ -140,7 +144,7 @@
     </section>
 
     <!-- Trust & Warranty Section -->
-    <section id="section-warranty" class="py-24 bg-black border-t border-white/5">
+    <section id="section-warranty" class="py-24 bg-black/80 backdrop-blur-[2px] border-t border-white/5 relative z-10">
         <div class="container mx-auto px-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Warranty -->
@@ -173,7 +177,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="py-20 px-6 border-t border-white/5 text-center">
+    <footer class="py-20 px-6 border-t border-white/5 text-center relative z-10 bg-black/80 backdrop-blur-[2px]">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col items-center gap-6">
                 <div class="flex items-center">

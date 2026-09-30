@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Busca Profissional de Informações - Serviço Especializado 🔍</title>
     <link rel="stylesheet" href="/src/style.css">
     <style>
@@ -35,7 +36,10 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col relative tech-grid">
+    <!-- Interactive Aether Flow Background Canvas -->
+    <canvas id="aether-flow-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0" aria-hidden="true"></canvas>
+
     <!-- Loader -->
     <div id="global-loader" class="fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-500">
         <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -71,7 +75,7 @@
         <a href="https://wa.me/5577999587570" target="_blank" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Contato</a>
     </div>
 
-    <main class="flex-grow pt-40 pb-20 px-6">
+    <main class="flex-grow pt-40 pb-20 px-6 relative z-10">
         <div class="max-w-xl mx-auto">
             <div id="form-container" class="glass-card p-8 md:p-12 rounded-[2.5rem]">
                 <div class="mb-10">
@@ -167,7 +171,7 @@
         </div>
     </main>
 
-    <footer class="py-12 border-t border-white/5 text-center bg-black/20">
+    <footer class="py-12 border-t border-white/5 text-center bg-black/80 backdrop-blur-[2px] relative z-10">
         <div class="max-w-7xl mx-auto px-6">
             <p class="text-zinc-500 text-xs mb-4 font-medium">Suporte Técnico: <span data-config-key="whatsapp">(77) 999587570</span> | Atendimento 24h</p>
             <p class="text-zinc-600 text-[10px] uppercase tracking-[0.3em]"><a href="/admin.html" class="hover:text-blue-500 transition-colors">&copy;</a> 2026 <span class="site-name">LESTEK</span> - TODOS OS DIREITOS RESERVADOS</p>
@@ -190,33 +194,39 @@
             const container = document.getElementById('form-container');
             const success = document.getElementById('success-container');
 
-            const nome = document.getElementById('nome').value;
-            const email = document.getElementById('email').value;
-            const whatsapp = document.getElementById('whatsapp').value;
-            const conhecido = document.getElementById('dados-conhecidos').value;
-            const infoConhecida = document.getElementById('info-conhecida').value;
+            const cleanText = (val) => String(val || '').replace(/[\x00-\x1F\x7F]/g, '').trim().substring(0, 500);
+
+            const nome = cleanText(document.getElementById('nome').value);
+            const email = cleanText(document.getElementById('email').value);
+            const whatsapp = cleanText(document.getElementById('whatsapp').value);
+            const conhecido = cleanText(document.getElementById('dados-conhecidos').value);
+            const infoConhecida = cleanText(document.getElementById('info-conhecida').value);
             
-            const necessidades = Array.from(document.querySelectorAll('input[name="necessidade"]:checked')).map(cb => cb.value);
-            const outrosTexto = document.getElementById('outros-texto').value;
+            const necessidades = Array.from(document.querySelectorAll('input[name="necessidade"]:checked'))
+                .map(cb => cleanText(cb.value))
+                .filter(Boolean);
+            const outrosTexto = cleanText(document.getElementById('outros-texto').value);
             
             if (necessidades.includes('Outros') && outrosTexto) {
                 necessidades[necessidades.indexOf('Outros')] = `Outros (${outrosTexto})`;
             }
 
-            let message = `*NOVA SOLICITAÇÃO DE BUSCA DE DADOS* 🔍\n\n`;
-            message += `*Nome:* ${nome}\n`;
-            message += `*E-mail:* ${email}\n`;
-            message += `*WhatsApp:* ${whatsapp}\n\n`;
+            let message = `*SOLICITAÇÃO DE CONTATO / BUSCA DE DADOS* 🔍\n\n`;
+            message += `*Nome:* ${nome || 'Não informado'}\n`;
+            message += `*E-mail:* ${email || 'Não informado'}\n`;
+            message += `*WhatsApp:* ${whatsapp || 'Não informado'}\n\n`;
             message += `*O que já sabe:* ${conhecido || 'Não informado'}\n`;
             message += `*Informações conhecidas:* ${infoConhecida || 'Nenhuma'}\n\n`;
             message += `*Dados Necessários:* ${necessidades.length > 0 ? necessidades.join(', ') : 'Nenhum selecionado'}`;
 
             let baseUrl = window.getWhatsAppLink ? window.getWhatsAppLink() : 'https://wa.me/5577999587570';
-            // Ensure we append the text parameter correctly
             const separator = baseUrl.includes('?') ? '&' : '?';
-            const whatsappUrl = `${baseUrl}${separator}text=${encodeURIComponent(message)}`;
+            const rawUrl = `${baseUrl}${separator}text=${encodeURIComponent(message)}`;
             
-            window.open(whatsappUrl, '_blank');
+            // Validate protocol is strictly https: or http:
+            if (/^https?:\/\//i.test(rawUrl)) {
+                window.open(rawUrl, '_blank', 'noopener,noreferrer');
+            }
 
             container.classList.add('hidden');
             success.classList.remove('hidden');

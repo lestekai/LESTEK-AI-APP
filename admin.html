@@ -3,396 +3,845 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | LESTEK</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Painel Administrativo | LESTEK</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: white; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
-        input, textarea, select { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 0.75rem; border-radius: 0.75rem; width: 100%; transition: all 0.3s; }
-        textarea { resize: vertical; min-height: 80px; }
-        input:focus, textarea:focus { outline: none; border-color: #3b82f6; background: rgba(255, 255, 255, 0.08); }
-        .btn-primary { background: #3b82f6; color: white; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; border-radius: 0.75rem; transition: all 0.3s; }
-        .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
-        .btn-danger { background: #ef4444; color: white; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.3s; }
-        .btn-danger:hover { background: #dc2626; }
+        body { font-family: 'Inter', sans-serif; background-color: #070709; color: #f4f4f5; }
+        .admin-card { background: #111116; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.25rem; }
+        .admin-card-header { border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 1.25rem 1.5rem; }
+        .input-dark {
+            background: #09090d;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+        .input-dark:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: #0d0d14;
+        }
+        .input-label {
+            display: block;
+            font-size: 0.6875rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a1a1aa;
+            margin-bottom: 0.375rem;
+        }
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #a1a1aa;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .tab-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.05); }
+        .tab-btn.active {
+            color: #ffffff;
+            background: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+        .toast-animate { animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes toastIn { from { transform: translateY(100%) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div id="login-screen" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-4">
-        <div class="max-w-md w-full glass-card p-8 rounded-3xl text-center">
-            <h1 class="text-3xl font-black mb-8 tracking-tighter">ACESSO RESTRITO</h1>
-            <input type="email" id="admin-email" placeholder="Email de Acesso" class="mb-4 text-center">
-            <input type="password" id="admin-pass" placeholder="Senha de Acesso" class="mb-4 text-center" onkeypress="if(event.key === 'Enter') loginWithFirebase()">
-            <div class="flex items-center justify-center gap-2 mb-6 text-zinc-400">
-                <input type="checkbox" id="remember-me" class="w-4 h-4 rounded border-white/10 accent-blue-500">
-                <label for="remember-me" class="text-xs font-bold uppercase tracking-widest cursor-pointer">Lembrar senha (login automático)</label>
+<body class="min-h-screen antialiased flex flex-col">
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-[#070709] flex items-center justify-center p-4">
+        <div class="max-w-md w-full admin-card p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="text-center mb-8 relative z-10">
+                <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-2xl mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                    L
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase">Acesso Administrativo</h1>
+                <p class="text-xs text-zinc-400 mt-2 font-medium">Controle e gerenciamento do ecossistema LESTEK</p>
             </div>
-            <button onclick="loginWithFirebase()" class="w-full btn-primary" id="login-btn">Entrar no Painel</button>
+            
+            <form onsubmit="event.preventDefault(); loginWithFirebase();" class="space-y-4 relative z-10">
+                <div>
+                    <label class="input-label" for="admin-email">E-mail</label>
+                    <input type="email" id="admin-email" placeholder="admin@lestek.com" class="input-dark">
+                </div>
+                <div>
+                    <label class="input-label" for="admin-pass">Senha</label>
+                    <input type="password" id="admin-pass" placeholder="••••••••" class="input-dark">
+                </div>
+                <div class="flex items-center gap-2 pt-2 text-zinc-400">
+                    <input type="checkbox" id="remember-me" class="w-4 h-4 rounded border-zinc-700 bg-zinc-900 accent-blue-600 cursor-pointer">
+                    <label for="remember-me" class="text-xs font-semibold text-zinc-300 cursor-pointer select-none">Manter sessão ativa neste dispositivo</label>
+                </div>
+                <button type="submit" id="login-btn" class="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider text-xs shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer mt-4">
+                    Entrar no Painel
+                </button>
+            </form>
         </div>
     </div>
 
-    <div id="admin-panel" class="hidden max-w-6xl mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-4">
-            <div>
-                <h1 class="text-4xl font-black tracking-tighter">PAINEL DE CONTROLE</h1>
-                <p class="text-zinc-500 font-medium">Gerencie todo o ecossistema LESTEK em tempo real.</p>
+    <!-- Main Admin Shell -->
+    <div id="admin-panel" class="hidden flex-1 flex flex-col">
+        <!-- Top Navigation Bar -->
+        <header class="sticky top-0 z-40 bg-[#09090d]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-600/30">
+                    L
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-black text-lg tracking-tight text-white">LESTEK</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20">Admin v2.0</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                        <span id="db-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="db-status-text">Conectado</span>
+                    </div>
+                </div>
             </div>
-            <div class="flex gap-4">
-                <a href="/" target="_blank" class="px-6 py-3 glass-card rounded-xl font-bold text-sm hover:bg-white/5 transition-all">Ver Site</a>
-                <button onclick="logout()" class="px-6 py-3 bg-red-500/10 text-red-500 rounded-xl font-bold text-sm hover:bg-red-500/20 transition-all">Sair</button>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="/" target="_blank" class="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-200 text-xs font-bold transition-all border border-white/5">
+                    <span>Ver Site</span>
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </a>
+                <button onclick="logout()" class="px-3 sm:px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition-all border border-red-500/20">
+                    Sair
+                </button>
             </div>
         </header>
 
-        <div id="config-warn" class="hidden bg-red-500 text-white p-4 text-center font-bold text-sm mb-8 rounded-xl shadow-lg">
-            ⚠️ ATENÇÃO: O banco de dados (Firebase) não está configurado. Suas edições não serão salvas na nuvem.
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Coluna 1: Geral e Logo -->
-            <div class="lg:col-span-1 space-y-8">
-                <section class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-black mb-6 uppercase tracking-widest text-blue-500">Identidade Visual</h2>
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Logo Atual</label>
-                            <div id="logo-preview" class="w-32 h-32 rounded-2xl bg-white/5 flex items-center justify-center overflow-hidden border border-white/10 mb-4">
-                                <span class="text-zinc-700 text-xs">Sem Logo</span>
-                            </div>
-                            <input type="file" id="logo-upload" accept="image/*" class="hidden">
-                            <button onclick="document.getElementById('logo-upload').click()" class="w-full px-4 py-3 glass-card rounded-xl text-xs font-bold hover:bg-white/5 transition-all mb-2">Upload Nova Logo</button>
-                            <p class="text-[9px] text-zinc-600 text-center">Envie para o Firebase Storage</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Nome do Site</label>
-                            <input type="text" id="site_name" data-section="site_name">
-                        </div>
-                    </div>
-                </section>
-
-                <section class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-black mb-6 uppercase tracking-widest text-blue-500">Contato & Pix</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">WhatsApp (Apenas Números)</label>
-                            <input type="text" id="whatsapp" data-section="whatsapp">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Link de Contato Alternativo</label>
-                            <input type="text" id="contact_link" data-section="contact_link" placeholder="Ex: https://linktr.ee/seu_link">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Chave PIX</label>
-                            <input type="text" id="pix_key" data-section="pix_key">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Nome PIX</label>
-                            <input type="text" id="pix_name" data-section="pix_name">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Cidade PIX</label>
-                            <input type="text" id="pix_city" data-section="pix_city">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Instagram (User)</label>
-                            <input type="text" id="instagram" data-section="instagram">
-                        </div>
-                    </div>
-                </section>
-                <section class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-black mb-6 uppercase tracking-widest text-blue-500">Ordem das Seções (Home)</h2>
-                    <div id="sections-order-list" class="space-y-2">
-                        <!-- Lista de seções -->
-                    </div>
-                </section>
-            </div>
-
-            <!-- Coluna 2: Conteúdo Hero e Seções -->
-            <div class="lg:col-span-2 space-y-8">
-                <section class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-black mb-6 uppercase tracking-widest text-blue-500">Conteúdo Principal (Hero)</h2>
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Badge Hero (Etiqueta)</label>
-                            <input type="text" id="hero_badge" data-section="hero_badge">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Hero</label>
-                            <textarea id="hero_title" data-section="hero_title" rows="2"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Hero</label>
-                            <textarea id="hero_subtitle" data-section="hero_subtitle" rows="3"></textarea>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Botão Hero 1</label>
-                                <input type="text" id="hero_btn1" data-section="hero_btn1">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Botão Hero 2</label>
-                                <input type="text" id="hero_btn2" data-section="hero_btn2">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Badge CTA (Etiqueta)</label>
-                            <input type="text" id="cta_badge" data-section="cta_badge">
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título CTA</label>
-                                <textarea id="cta_title" data-section="cta_title" rows="2"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo CTA</label>
-                                <input type="text" id="cta_subtitle" data-section="cta_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Botão CTA</label>
-                                <input type="text" id="cta_btn" data-section="cta_btn">
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-black mb-6 uppercase tracking-widest text-blue-500">Páginas Internas & Outros</h2>
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Badge Soluções</label>
-                                <input type="text" id="solutions_badge" data-section="solutions_badge">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Soluções</label>
-                                <textarea id="solutions_title" data-section="solutions_title" rows="2"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Soluções</label>
-                                <input type="text" id="solutions_subtitle" data-section="solutions_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Card 1: Título</label>
-                                <input type="text" id="solutions_card1_title" data-section="solutions_card1_title">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Card 1: Botão</label>
-                                <input type="text" id="solutions_card1_btn" data-section="solutions_card1_btn">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Card 1: Descrição</label>
-                                <textarea id="solutions_card1_desc" data-section="solutions_card1_desc" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Card 2: Título</label>
-                                <input type="text" id="solutions_card2_title" data-section="solutions_card2_title">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Card 2: Botão</label>
-                                <input type="text" id="solutions_card2_btn" data-section="solutions_card2_btn">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Card 2: Descrição</label>
-                                <textarea id="solutions_card2_desc" data-section="solutions_card2_desc" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Badge Serviços</label>
-                                <input type="text" id="services_badge" data-section="services_badge">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Serviços</label>
-                                <textarea id="services_title" data-section="services_title" rows="2"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Serviços</label>
-                                <input type="text" id="services_subtitle" data-section="services_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Botão Serviços</label>
-                                <input type="text" id="services_btn" data-section="services_btn">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Badge Produtos Hero</label>
-                                <input type="text" id="ebooks_hero_badge" data-section="ebooks_hero_badge">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Produtos Hero</label>
-                                <textarea id="ebooks_hero_title" data-section="ebooks_hero_title" rows="2"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Produtos Hero</label>
-                                <input type="text" id="ebooks_hero_subtitle" data-section="ebooks_hero_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Botão Produtos</label>
-                                <input type="text" id="produtos_btn" data-section="produtos_btn">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Badge Busca Hero</label>
-                                <input type="text" id="search_hero_badge" data-section="search_hero_badge">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Busca Hero</label>
-                                <input type="text" id="search_hero_title" data-section="search_hero_title">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Busca Hero</label>
-                                <input type="text" id="search_hero_subtitle" data-section="search_hero_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Botão Busca</label>
-                                <input type="text" id="search_btn" data-section="search_btn">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Aviso de Privacidade (Busca)</label>
-                                <textarea id="search_privacy" data-section="search_privacy" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Rodapé: Sobre</label>
-                                <textarea id="footer_about" data-section="footer_about" rows="2"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Rodapé: Direitos Autorais</label>
-                                <input type="text" id="footer_rights" data-section="footer_rights">
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="glass-card p-8 rounded-3xl">
-                    <h2 class="text-xl font-black mb-6 uppercase tracking-widest text-blue-500">Garantias & Benefícios</h2>
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Garantia</label>
-                                <input type="text" id="warranty_title" data-section="warranty_title">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Garantia</label>
-                                <input type="text" id="warranty_subtitle" data-section="warranty_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Suporte</label>
-                                <input type="text" id="support_title" data-section="support_title">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Suporte</label>
-                                <input type="text" id="support_subtitle" data-section="support_subtitle">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Título Acesso</label>
-                                <input type="text" id="access_title" data-section="access_title">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Subtítulo Acesso</label>
-                                <input type="text" id="access_subtitle" data-section="access_subtitle">
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="saveGeneralContent()" class="mt-8 w-full btn-primary">Salvar Conteúdo Geral</button>
-                </section>
-
-                <!-- Serviços CRUD -->
-                <section class="glass-card p-8 rounded-3xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-black uppercase tracking-widest text-blue-500">Serviços</h2>
-                        <button onclick="openServiceModal()" class="px-4 py-2 bg-blue-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-blue-600 transition-all">Adicionar Novo</button>
-                    </div>
-                    <div id="services-list" class="space-y-4">
-                        <!-- Lista de serviços -->
-                    </div>
-                </section>
-
-                <!-- Produtos/Ebooks CRUD -->
-                <section class="glass-card p-8 rounded-3xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-black uppercase tracking-widest text-blue-500">Produtos</h2>
-                        <button onclick="openProductModal()" class="px-4 py-2 bg-blue-500 text-white text-[10px] font-black uppercase rounded-lg hover:bg-blue-600 transition-all">Adicionar Novo</button>
-                    </div>
-                    <div id="products-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Lista de produtos -->
-                    </div>
-                </section>
+        <!-- Offline Banner -->
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-8 pt-6">
+            <div id="config-warn" class="hidden bg-amber-500/15 border border-amber-500/30 text-amber-200 p-4 mb-6 rounded-2xl flex items-center justify-between gap-4 text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">⚠️</span>
+                    <span><strong>Modo Local Ativo:</strong> O Firebase Firestore não está conectado com chave válida. As alterações serão salvas localmente no navegador.</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modais -->
-    <div id="service-modal" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4">
-        <div class="max-w-md w-full glass-card p-8 rounded-3xl">
-            <h3 class="text-2xl font-black mb-6 uppercase tracking-tighter">Serviço</h3>
-            <input type="hidden" id="service-id">
-            <div class="space-y-4">
-                <input type="text" id="service-title" placeholder="Título do Serviço">
-                <textarea id="service-desc" placeholder="Descrição" rows="3"></textarea>
-                <input type="text" id="service-icon" placeholder="Emoji/Ícone (ex: 🚀)">
+        <!-- Navigation Tabs Bar -->
+        <nav class="max-w-7xl w-full mx-auto px-4 sm:px-8 mb-6">
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-2 custom-scrollbar">
+                <button onclick="switchTab('dashboard')" class="tab-btn active" data-tab="dashboard">
+                    <span>📊</span> Visão Geral
+                </button>
+                <button onclick="switchTab('identity')" class="tab-btn" data-tab="identity">
+                    <span>🏢</span> Identidade & Contatos
+                </button>
+                <button onclick="switchTab('home')" class="tab-btn" data-tab="home">
+                    <span>🚀</span> Home & Destaques
+                </button>
+                <button onclick="switchTab('services')" class="tab-btn" data-tab="services">
+                    <span>⚡</span> Serviços <span id="badge-services-count" class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">0</span>
+                </button>
+                <button onclick="switchTab('products')" class="tab-btn" data-tab="products">
+                    <span>📦</span> Produtos <span id="badge-products-count" class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">0</span>
+                </button>
+                <button onclick="switchTab('pages')" class="tab-btn" data-tab="pages">
+                    <span>📄</span> Páginas & Textos
+                </button>
+                <button onclick="switchTab('warranty')" class="tab-btn" data-tab="warranty">
+                    <span>🛡️</span> Garantias
+                </button>
+                <button onclick="switchTab('backup')" class="tab-btn" data-tab="backup">
+                    <span>💾</span> Backup & Ferramentas
+                </button>
             </div>
-            <div class="flex gap-4 mt-8">
-                <button onclick="closeModal('service-modal')" class="flex-1 px-4 py-3 glass-card rounded-xl font-bold">Cancelar</button>
-                <button onclick="saveServiceAction()" class="flex-1 btn-primary">Salvar</button>
-            </div>
-        </div>
-    </div>
+        </nav>
 
-    <div id="product-modal" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4">
-        <div class="max-w-md w-full glass-card p-8 rounded-3xl">
-            <h3 class="text-2xl font-black mb-6 uppercase tracking-tighter">Produto</h3>
-            <input type="hidden" id="product-id">
-            <div class="space-y-4">
-                <input type="text" id="product-name" placeholder="Nome do Produto">
-                <textarea id="product-desc" placeholder="Descrição do Produto" rows="3"></textarea>
-                <input type="text" id="product-price" placeholder="Preço (ex: 47,00)">
-                <div>
-                    <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Imagem do Produto</label>
-                    <div class="flex gap-2 mb-1">
-                        <input type="text" id="product-image" placeholder="URL da Imagem ou envie um arquivo" class="flex-1">
-                        <input type="file" id="product-image-file" accept="image/*" class="hidden">
-                        <button type="button" onclick="document.getElementById('product-image-file').click()" class="px-3 py-2 bg-white/10 rounded-xl text-xs font-bold hover:bg-white/20 whitespace-nowrap">Upload</button>
+        <!-- Main Content Area with Tab Panes -->
+        <main class="max-w-7xl w-full mx-auto px-4 sm:px-8 pb-16 flex-1">
+
+            <!-- TAB 1: VISÃO GERAL (DASHBOARD) -->
+            <div id="tab-dashboard" class="tab-pane space-y-6">
+                <!-- Stat Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="admin-card p-5 cursor-pointer hover:border-blue-500/40 transition-all" onclick="switchTab('services')">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Serviços Ativos</span>
+                            <span class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-sm">⚡</span>
+                        </div>
+                        <div class="text-3xl font-black text-white" id="stat-services">0</div>
+                        <p class="text-[11px] text-zinc-500 mt-1">Clique para gerenciar serviços</p>
+                    </div>
+
+                    <div class="admin-card p-5 cursor-pointer hover:border-blue-500/40 transition-all" onclick="switchTab('products')">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Produtos Cadastrados</span>
+                            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">📦</span>
+                        </div>
+                        <div class="text-3xl font-black text-white" id="stat-products">0</div>
+                        <p class="text-[11px] text-zinc-500 mt-1">Clique para gerenciar produtos</p>
+                    </div>
+
+                    <div class="admin-card p-5 cursor-pointer hover:border-yellow-500/40 transition-all" onclick="switchTab('products')">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Produtos Destaque</span>
+                            <span class="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-400 flex items-center justify-center text-sm">★</span>
+                        </div>
+                        <div class="text-3xl font-black text-yellow-400" id="stat-featured">0</div>
+                        <p class="text-[11px] text-zinc-500 mt-1">Exibidos em destaque na loja</p>
+                    </div>
+
+                    <div class="admin-card p-5 cursor-pointer hover:border-purple-500/40 transition-all" onclick="switchTab('identity')">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">WhatsApp Principal</span>
+                            <span class="w-8 h-8 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center text-sm">💬</span>
+                        </div>
+                        <div class="text-lg font-black text-white truncate" id="stat-whatsapp">-</div>
+                        <p class="text-[11px] text-zinc-500 mt-1">Destino das mensagens do site</p>
                     </div>
                 </div>
-                <input type="text" id="product-link" placeholder="Link de Compra (ex: https://kiwify.com.br/...)">
+
+                <!-- Quick Actions & Overview -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="admin-card lg:col-span-2 p-6 sm:p-8">
+                        <h3 class="text-lg font-black uppercase tracking-tight text-white mb-2">Ações Rápidas do Sistema</h3>
+                        <p class="text-xs text-zinc-400 mb-6">Acesse as tarefas mais frequentes com um único clique.</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="openServiceModal()" class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-blue-600/10 hover:border-blue-500/30 border border-white/5 transition-all text-left group">
+                                <span class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">➕</span>
+                                <div>
+                                    <div class="font-bold text-sm text-white">Novo Serviço</div>
+                                    <div class="text-[11px] text-zinc-400">Adicionar à lista de serviços</div>
+                                </div>
+                            </button>
+
+                            <button onclick="openProductModal()" class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-emerald-600/10 hover:border-emerald-500/30 border border-white/5 transition-all text-left group">
+                                <span class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">📦</span>
+                                <div>
+                                    <div class="font-bold text-sm text-white">Novo Produto</div>
+                                    <div class="text-[11px] text-zinc-400">Cadastrar licença ou produto</div>
+                                </div>
+                            </button>
+
+                            <button onclick="switchTab('home')" class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-purple-600/10 hover:border-purple-500/30 border border-white/5 transition-all text-left group">
+                                <span class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">↕️</span>
+                                <div>
+                                    <div class="font-bold text-sm text-white">Reordenar Home</div>
+                                    <div class="text-[11px] text-zinc-400">Organizar seções da página inicial</div>
+                                </div>
+                            </button>
+
+                            <button onclick="exportBackupData()" class="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-amber-600/10 hover:border-amber-500/30 border border-white/5 transition-all text-left group">
+                                <span class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">💾</span>
+                                <div>
+                                    <div class="font-bold text-sm text-white">Exportar Backup</div>
+                                    <div class="text-[11px] text-zinc-400">Baixar cópia de segurança JSON</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="admin-card p-6 sm:p-8 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-black uppercase tracking-tight text-white mb-2">Status da Plataforma</h3>
+                            <p class="text-xs text-zinc-400 mb-6">Informações sobre o ambiente e sincronização.</p>
+                            
+                            <div class="space-y-3 text-xs">
+                                <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span class="text-zinc-400">Ambiente</span>
+                                    <span class="font-bold text-white">Produção LESTEK</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span class="text-zinc-400">Banco de Dados</span>
+                                    <span id="env-db-label" class="font-bold text-emerald-400">Firebase Firestore</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span class="text-zinc-400">Animação de Fundo</span>
+                                    <span class="font-bold text-blue-400">Aether Flow (Ativo)</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="text-zinc-400">Suporte a Mobile</span>
+                                    <span class="font-bold text-white">Otimizado (Touch + DPR)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="/" target="_blank" class="w-full mt-6 py-3 px-4 bg-white/10 hover:bg-white/15 text-white text-xs font-bold uppercase tracking-wider rounded-xl text-center block transition-all">
+                            Visualizar Site em Tempo Real ↗
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="flex gap-4 mt-8">
-                <button onclick="closeModal('product-modal')" class="flex-1 px-4 py-3 glass-card rounded-xl font-bold">Cancelar</button>
-                <button onclick="saveProductAction()" class="flex-1 btn-primary">Salvar</button>
+
+            <!-- TAB 2: IDENTIDADE & CONTATOS -->
+            <div id="tab-identity" class="tab-pane hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Logo Upload Card -->
+                    <div class="admin-card p-6 sm:p-8">
+                        <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6">
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Logotipo da Empresa</h3>
+                        </div>
+                        
+                        <div class="flex flex-col items-center text-center">
+                            <div id="logo-preview-box" class="w-40 h-40 rounded-2xl bg-black/50 border-2 border-dashed border-white/15 flex items-center justify-center overflow-hidden mb-4 relative p-3">
+                                <span class="text-zinc-600 text-xs font-bold" id="logo-preview-text">Sem Logo</span>
+                            </div>
+                            
+                            <input type="file" id="logo-upload" accept="image/*" class="hidden">
+                            <button type="button" onclick="document.getElementById('logo-upload').click()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/25 transition-all mb-2 cursor-pointer">
+                                Escolher Nova Imagem
+                            </button>
+                            <p class="text-[10px] text-zinc-500">Formatos recomendados: PNG ou SVG com fundo transparente</p>
+                        </div>
+                    </div>
+
+                    <!-- Company Info & Contacts Card -->
+                    <div class="admin-card lg:col-span-2 p-6 sm:p-8">
+                        <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Informações de Contato & PIX</h3>
+                            <button onclick="saveIdentityContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                                Salvar Contatos
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="input-label">Nome da Marca / Site</label>
+                                <input type="text" id="site_name" data-section="site_name" class="input-dark">
+                            </div>
+
+                            <div>
+                                <label class="input-label">WhatsApp (Apenas Dígitos)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="whatsapp" data-section="whatsapp" placeholder="5577999587570" class="input-dark">
+                                    <button type="button" onclick="testWhatsAppLink()" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-xl text-xs font-bold shrink-0 transition-colors" title="Testar no WhatsApp">
+                                        Testar ↗
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="input-label">Link de Contato Alternativo (Opcional)</label>
+                                <input type="text" id="contact_link" data-section="contact_link" placeholder="https://linktr.ee/..." class="input-dark">
+                            </div>
+
+                            <div>
+                                <label class="input-label">Instagram (Usuário sem @)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="instagram" data-section="instagram" placeholder="dudu.santos___" class="input-dark">
+                                    <button type="button" onclick="testInstagramLink()" class="px-3 py-2 bg-pink-600/20 hover:bg-pink-600/30 text-pink-400 rounded-xl text-xs font-bold shrink-0 transition-colors" title="Abrir Instagram">
+                                        Ver ↗
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-2 pt-2 border-t border-white/5">
+                                <h4 class="text-xs font-black uppercase tracking-wider text-zinc-400 mb-3">Dados para Recebimento via PIX</h4>
+                            </div>
+
+                            <div>
+                                <label class="input-label">Chave PIX (Telefone, CPF ou Aleatória)</label>
+                                <input type="text" id="pix_key" data-section="pix_key" class="input-dark">
+                            </div>
+
+                            <div>
+                                <label class="input-label">Nome do Titular da Conta PIX</label>
+                                <input type="text" id="pix_name" data-section="pix_name" class="input-dark">
+                            </div>
+
+                            <div class="sm:col-span-2">
+                                <label class="input-label">Cidade do Titular da Conta PIX</label>
+                                <input type="text" id="pix_city" data-section="pix_city" class="input-dark">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: HOME & SEÇÕES -->
+            <div id="tab-home" class="tab-pane hidden space-y-6">
+                <!-- Reorder Sections Card -->
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Ordem das Seções da Home</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Use as setas para reorganizar a sequência em que as seções aparecem para o visitante.</p>
+                        </div>
+                    </div>
+                    <div id="sections-order-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <!-- Sections will be rendered here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Hero Section Card -->
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Hero Principal (Topo da Página)</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Primeira impressão do visitante ao acessar o site.</p>
+                        </div>
+                        <button onclick="saveHomeContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Salvar Hero
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="input-label">Etiqueta Superior (Badge)</label>
+                            <input type="text" id="hero_badge" data-section="hero_badge" class="input-dark">
+                        </div>
+
+                        <div>
+                            <label class="input-label">Título Principal (Suporta HTML com &lt;span class="text-blue-500"&gt;)</label>
+                            <textarea id="hero_title" data-section="hero_title" rows="2" class="input-dark font-mono text-xs"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="input-label">Subtítulo / Descrição</label>
+                            <textarea id="hero_subtitle" data-section="hero_subtitle" rows="3" class="input-dark"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="input-label">Texto do Botão 1 (WhatsApp)</label>
+                                <input type="text" id="hero_btn1" data-section="hero_btn1" class="input-dark">
+                            </div>
+                            <div>
+                                <label class="input-label">Texto do Botão 2 (Nossos Serviços)</label>
+                                <input type="text" id="hero_btn2" data-section="hero_btn2" class="input-dark">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Section Card -->
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Chamada para Ação Final (CTA)</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Seção azul de conversão direta para fechamento.</p>
+                        </div>
+                        <button onclick="saveHomeContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Salvar CTA
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="input-label">Etiqueta (Badge CTA)</label>
+                            <input type="text" id="cta_badge" data-section="cta_badge" class="input-dark">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="input-label">Título CTA</label>
+                                <textarea id="cta_title" data-section="cta_title" rows="2" class="input-dark font-mono text-xs"></textarea>
+                            </div>
+                            <div>
+                                <label class="input-label">Subtítulo CTA</label>
+                                <textarea id="cta_subtitle" data-section="cta_subtitle" rows="2" class="input-dark"></textarea>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="input-label">Texto do Botão de Conversão</label>
+                            <input type="text" id="cta_btn" data-section="cta_btn" class="input-dark">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: SERVIÇOS -->
+            <div id="tab-services" class="tab-pane hidden space-y-6">
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Gerenciador de Serviços</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Edite, adicione ou reordene os serviços oferecidos pela LESTEK.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="search-services-input" oninput="filterServices()" placeholder="Buscar serviço..." class="input-dark !py-2 !text-xs max-w-[200px]">
+                            <button onclick="openServiceModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-xs uppercase tracking-wider shrink-0 transition-all shadow-lg shadow-blue-600/20 cursor-pointer">
+                                + Novo Serviço
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="services-list" class="space-y-3">
+                        <!-- Services dynamically rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: PRODUTOS -->
+            <div id="tab-products" class="tab-pane hidden space-y-6">
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Catálogo de Produtos & Licenças</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Gerencie preços, fotos, descrições e itens em destaque.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="search-products-input" oninput="filterProducts()" placeholder="Buscar produto..." class="input-dark !py-2 !text-xs max-w-[200px]">
+                            <button onclick="openProductModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-xs uppercase tracking-wider shrink-0 transition-all shadow-lg shadow-blue-600/20 cursor-pointer">
+                                + Novo Produto
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="products-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Products dynamically rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: PÁGINAS & TEXTOS -->
+            <div id="tab-pages" class="tab-pane hidden space-y-6">
+                <!-- Busca de Dados Texts -->
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Página: Busca de Dados Avançada</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Configuração do formulário de localização de informações.</p>
+                        </div>
+                        <button onclick="savePagesContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Salvar Busca
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="input-label">Badge Hero Busca</label>
+                            <input type="text" id="search_hero_badge" data-section="search_hero_badge" class="input-dark">
+                        </div>
+                        <div>
+                            <label class="input-label">Texto do Botão do Formulário</label>
+                            <input type="text" id="search_btn" data-section="search_btn" class="input-dark">
+                        </div>
+                        <div>
+                            <label class="input-label">Título da Página de Busca</label>
+                            <input type="text" id="search_hero_title" data-section="search_hero_title" class="input-dark">
+                        </div>
+                        <div>
+                            <label class="input-label">Subtítulo da Página de Busca</label>
+                            <input type="text" id="search_hero_subtitle" data-section="search_hero_subtitle" class="input-dark">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="input-label">Aviso de Privacidade & LGPD</label>
+                            <textarea id="search_privacy" data-section="search_privacy" rows="2" class="input-dark"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soluções Section Texts -->
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Seção: Soluções Inteligentes</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Cards principais que levam para Busca de Dados e Produtos.</p>
+                        </div>
+                        <button onclick="savePagesContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Salvar Soluções
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="input-label">Badge Soluções</label>
+                                <input type="text" id="solutions_badge" data-section="solutions_badge" class="input-dark">
+                            </div>
+                            <div>
+                                <label class="input-label">Título Soluções</label>
+                                <input type="text" id="solutions_title" data-section="solutions_title" class="input-dark">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="input-label">Subtítulo Soluções</label>
+                                <input type="text" id="solutions_subtitle" data-section="solutions_subtitle" class="input-dark">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                            <!-- Card 1 -->
+                            <div class="space-y-3 p-4 rounded-xl bg-black/40 border border-white/5">
+                                <span class="text-xs font-black uppercase text-blue-400">Card 1 (Busca Profissional)</span>
+                                <div>
+                                    <label class="input-label">Título Card 1</label>
+                                    <input type="text" id="solutions_card1_title" data-section="solutions_card1_title" class="input-dark">
+                                </div>
+                                <div>
+                                    <label class="input-label">Botão Card 1</label>
+                                    <input type="text" id="solutions_card1_btn" data-section="solutions_card1_btn" class="input-dark">
+                                </div>
+                                <div>
+                                    <label class="input-label">Descrição Card 1</label>
+                                    <textarea id="solutions_card1_desc" data-section="solutions_card1_desc" rows="2" class="input-dark"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Card 2 -->
+                            <div class="space-y-3 p-4 rounded-xl bg-black/40 border border-white/5">
+                                <span class="text-xs font-black uppercase text-emerald-400">Card 2 (Produtos)</span>
+                                <div>
+                                    <label class="input-label">Título Card 2</label>
+                                    <input type="text" id="solutions_card2_title" data-section="solutions_card2_title" class="input-dark">
+                                </div>
+                                <div>
+                                    <label class="input-label">Botão Card 2</label>
+                                    <input type="text" id="solutions_card2_btn" data-section="solutions_card2_btn" class="input-dark">
+                                </div>
+                                <div>
+                                    <label class="input-label">Descrição Card 2</label>
+                                    <textarea id="solutions_card2_desc" data-section="solutions_card2_desc" rows="2" class="input-dark"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rodapé Texts -->
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Textos do Rodapé (Footer)</h3>
+                        <button onclick="savePagesContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Salvar Rodapé
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="input-label">Texto Sobre a Empresa</label>
+                            <textarea id="footer_about" data-section="footer_about" rows="2" class="input-dark"></textarea>
+                        </div>
+                        <div>
+                            <label class="input-label">Texto de Direitos Autorais</label>
+                            <input type="text" id="footer_rights" data-section="footer_rights" class="input-dark">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: GARANTIAS & BENEFÍCIOS -->
+            <div id="tab-warranty" class="tab-pane hidden space-y-6">
+                <div class="admin-card p-6 sm:p-8">
+                    <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Garantias & Diferenciais</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Os 3 blocos de confiança exibidos na Home.</p>
+                        </div>
+                        <button onclick="saveWarrantyContent(this)" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer">
+                            Salvar Garantias
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Card 1 -->
+                        <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl mb-2">🛡️</div>
+                            <h4 class="font-black text-xs uppercase tracking-wider text-white">Garantia</h4>
+                            <div>
+                                <label class="input-label">Título</label>
+                                <input type="text" id="warranty_title" data-section="warranty_title" class="input-dark">
+                            </div>
+                            <div>
+                                <label class="input-label">Subtítulo</label>
+                                <input type="text" id="warranty_subtitle" data-section="warranty_subtitle" class="input-dark">
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl mb-2">🎧</div>
+                            <h4 class="font-black text-xs uppercase tracking-wider text-white">Suporte VIP</h4>
+                            <div>
+                                <label class="input-label">Título</label>
+                                <input type="text" id="support_title" data-section="support_title" class="input-dark">
+                            </div>
+                            <div>
+                                <label class="input-label">Subtítulo</label>
+                                <input type="text" id="support_subtitle" data-section="support_subtitle" class="input-dark">
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl mb-2">⚡</div>
+                            <h4 class="font-black text-xs uppercase tracking-wider text-white">Acesso Imediato</h4>
+                            <div>
+                                <label class="input-label">Título</label>
+                                <input type="text" id="access_title" data-section="access_title" class="input-dark">
+                            </div>
+                            <div>
+                                <label class="input-label">Subtítulo</label>
+                                <input type="text" id="access_subtitle" data-section="access_subtitle" class="input-dark">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: BACKUP & FERRAMENTAS -->
+            <div id="tab-backup" class="tab-pane hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Backup Export & Import -->
+                    <div class="admin-card p-6 sm:p-8 space-y-4">
+                        <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6">
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Cópia de Segurança (Backup JSON)</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Exporte todas as configurações, serviços e catálogo para um arquivo.</p>
+                        </div>
+
+                        <p class="text-xs text-zinc-300 leading-relaxed">
+                            Mantenha seus dados seguros baixando uma cópia de segurança completa em JSON. Você pode restaurar ou guardar para segurança.
+                        </p>
+
+                        <button onclick="exportBackupData()" class="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider text-xs shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <span>📥</span> Baixar Backup Completo (.JSON)
+                        </button>
+                    </div>
+
+                    <!-- Firestore Rules Helper -->
+                    <div class="admin-card p-6 sm:p-8 space-y-4">
+                        <div class="admin-card-header -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6">
+                            <h3 class="font-black text-sm uppercase tracking-wider text-blue-400">Regras do Firestore</h3>
+                            <p class="text-xs text-zinc-400 mt-0.5">Permissões de segurança para visitantes e administrador.</p>
+                        </div>
+
+                        <p class="text-xs text-zinc-300 leading-relaxed">
+                            Para que os visitantes em outros aparelhos possam visualizar seus serviços e produtos cadastrados, as regras do Firestore precisam permitir leitura pública.
+                        </p>
+
+                        <button onclick="copyFirestoreRules()" class="w-full py-3.5 px-6 rounded-xl bg-white/10 hover:bg-white/15 text-white font-black uppercase tracking-wider text-xs border border-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <span>📋</span> Copiar Regras de Segurança
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL DE SERVIÇO -->
+    <div id="service-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="max-w-lg w-full admin-card p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="service-modal-title" class="text-xl font-black uppercase tracking-tight text-white">Editar Serviço</h3>
+                <button onclick="closeModal('service-modal')" class="text-zinc-400 hover:text-white p-2">✕</button>
+            </div>
+
+            <input type="hidden" id="service-id">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="input-label">Título do Serviço</label>
+                    <input type="text" id="service-title" placeholder="Ex: Otimização de Performance" class="input-dark">
+                </div>
+
+                <div>
+                    <label class="input-label">Ícone / Emoji Representativo</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="service-icon" placeholder="🚀" class="input-dark text-center text-xl max-w-[80px]">
+                        <div class="flex-1 flex items-center gap-1.5 overflow-x-auto p-1 bg-black/40 rounded-xl border border-white/5">
+                            <button type="button" onclick="selectEmoji('🚀')" class="p-1.5 hover:bg-white/10 rounded text-lg">🚀</button>
+                            <button type="button" onclick="selectEmoji('💻')" class="p-1.5 hover:bg-white/10 rounded text-lg">💻</button>
+                            <button type="button" onclick="selectEmoji('💿')" class="p-1.5 hover:bg-white/10 rounded text-lg">💿</button>
+                            <button type="button" onclick="selectEmoji('🧹')" class="p-1.5 hover:bg-white/10 rounded text-lg">🧹</button>
+                            <button type="button" onclick="selectEmoji('🧠')" class="p-1.5 hover:bg-white/10 rounded text-lg">🧠</button>
+                            <button type="button" onclick="selectEmoji('⚡')" class="p-1.5 hover:bg-white/10 rounded text-lg">⚡</button>
+                            <button type="button" onclick="selectEmoji('🛡️')" class="p-1.5 hover:bg-white/10 rounded text-lg">🛡️</button>
+                            <button type="button" onclick="selectEmoji('🔧')" class="p-1.5 hover:bg-white/10 rounded text-lg">🔧</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="input-label">Descrição Detalhada do Serviço</label>
+                    <textarea id="service-desc" rows="4" placeholder="Explique os benefícios e o que está incluso no serviço..." class="input-dark"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="button" onclick="closeModal('service-modal')" class="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-xs uppercase tracking-wider text-zinc-300 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" onclick="saveServiceAction(this)" class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer">
+                    Salvar Serviço
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL DE PRODUTO -->
+    <div id="product-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="max-w-lg w-full admin-card p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="product-modal-title" class="text-xl font-black uppercase tracking-tight text-white">Editar Produto</h3>
+                <button onclick="closeModal('product-modal')" class="text-zinc-400 hover:text-white p-2">✕</button>
+            </div>
+
+            <input type="hidden" id="product-id">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="input-label">Nome do Produto / Licença</label>
+                    <input type="text" id="product-name" placeholder="Ex: Licença Windows 11 Pro" class="input-dark">
+                </div>
+
+                <div>
+                    <label class="input-label">Preço (R$)</label>
+                    <input type="text" id="product-price" placeholder="47,00" class="input-dark font-bold text-emerald-400">
+                </div>
+
+                <div>
+                    <label class="input-label">Descrição</label>
+                    <textarea id="product-desc" rows="3" placeholder="Informações adicionais do produto..." class="input-dark"></textarea>
+                </div>
+
+                <div>
+                    <label class="input-label">Imagem do Produto</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="product-image" placeholder="URL da Imagem ou faça upload" oninput="updateProductImagePreview(this.value)" class="input-dark flex-1">
+                        <input type="file" id="product-image-file" accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('product-image-file').click()" class="px-4 py-2 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-bold shrink-0 transition-colors">
+                            Upload
+                        </button>
+                    </div>
+                    <!-- Live Image Preview -->
+                    <div class="w-full h-32 rounded-xl bg-black/50 border border-white/10 flex items-center justify-center overflow-hidden">
+                        <img id="product-image-preview" src="" alt="Preview" class="w-full h-full object-contain p-2 hidden">
+                        <span id="product-image-preview-empty" class="text-zinc-600 text-xs font-medium">Pré-visualização da imagem</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="input-label">Link de Checkout / Compra Direta (Opcional)</label>
+                    <input type="text" id="product-link" placeholder="Ex: https://kiwify.com.br/... (Deixe vazio para enviar ao WhatsApp)" class="input-dark">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button type="button" onclick="closeModal('product-modal')" class="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-xs uppercase tracking-wider text-zinc-300 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" onclick="saveProductAction(this)" class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer">
+                    Salvar Produto
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
     <script type="module">
         import { 
             isConfigured, 
@@ -408,6 +857,7 @@
             auth
         } from './src/db.js';
         import { defaultConfig } from './src/main.js';
+        import { escapeHtml, sanitizeHtml, sanitizeUrl, sha256 } from './src/lib/security.js';
         import { signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 
         let currentContent = {};
@@ -415,70 +865,153 @@
         let currentProducts = [];
         let currentFeaturedProducts = [];
         let currentSectionsOrder = ['section-hero', 'section-solutions', 'section-services', 'section-cta', 'section-warranty'];
+
         const sectionNames = {
-            'section-hero': 'Hero (Principal)',
-            'section-solutions': 'Soluções Inteligentes',
-            'section-services': 'Serviços Premium',
-            'section-cta': 'Chamada para Ação (CTA)',
-            'section-warranty': 'Garantias & Benefícios'
+            'section-hero': { name: 'Hero Principal', icon: '🚀' },
+            'section-solutions': { name: 'Soluções Inteligentes', icon: '🔍' },
+            'section-services': { name: 'Serviços Premium', icon: '⚡' },
+            'section-cta': { name: 'Chamada para Ação (CTA)', icon: '🎯' },
+            'section-warranty': { name: 'Garantias & Benefícios', icon: '🛡️' }
         };
 
+        // Toast notifications system
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast-animate pointer-events-auto p-4 rounded-xl shadow-2xl flex items-center justify-between gap-3 text-xs font-bold border backdrop-blur-md ${
+                type === 'success' ? 'bg-emerald-950/90 text-emerald-200 border-emerald-500/30' :
+                type === 'error' ? 'bg-red-950/90 text-red-200 border-red-500/30' :
+                'bg-blue-950/90 text-blue-200 border-blue-500/30'
+            }`;
+
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+            toast.innerHTML = `
+                <div class="flex items-center gap-2.5">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-black ${
+                        type === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
+                        type === 'error' ? 'bg-red-500/20 text-red-400' :
+                        'bg-blue-500/20 text-blue-400'
+                    }">${icon}</span>
+                    <span>${message}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-zinc-400 hover:text-white text-sm ml-2">✕</button>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        };
+
+        // Tab Navigation
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            const targetPane = document.getElementById(`tab-${tabId}`);
+            const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
+
+            if (targetPane) targetPane.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active');
+        };
+
+        // Secure Auth state listener: Never allow unverified localStorage flag to bypass Firebase Auth
         if (auth) {
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     document.getElementById('login-screen')?.classList.add('hidden');
                     document.getElementById('admin-panel')?.classList.remove('hidden');
                     init();
+                } else {
+                    document.getElementById('login-screen')?.classList.remove('hidden');
+                    document.getElementById('admin-panel')?.classList.add('hidden');
                 }
             });
-        } else if (localStorage.getItem('lestek_local_admin') === 'true' || sessionStorage.getItem('lestek_local_admin') === 'true') {
-            document.getElementById('login-screen')?.classList.add('hidden');
-            document.getElementById('admin-panel')?.classList.remove('hidden');
-            init();
+        } else {
+            // Em modo offline/local sem Firebase configurado, verifica sessão com hash
+            const sessionActive = sessionStorage.getItem('lestek_admin_session') || localStorage.getItem('lestek_admin_session');
+            if (sessionActive === 'authenticated') {
+                document.getElementById('login-screen')?.classList.add('hidden');
+                document.getElementById('admin-panel')?.classList.remove('hidden');
+                init();
+            }
         }
 
         window.loginWithFirebase = async () => {
-            const email = document.getElementById('admin-email').value;
+            const email = document.getElementById('admin-email').value.trim();
             const pass = document.getElementById('admin-pass').value;
             const rememberMe = document.getElementById('remember-me').checked;
             const btn = document.getElementById('login-btn');
             
             if (!email || !pass) {
-                alert("Preencha email e senha.");
+                showToast("Por favor, preencha email e senha.", "error");
                 return;
             }
 
             if (!auth) {
+                // Modo local sem Firebase: validação com hash criptográfico SHA-256
+                const storedHash = localStorage.getItem('lestek_admin_hash');
+                const enteredHash = await sha256(pass);
+
+                if (!storedHash) {
+                    // Primeiro acesso: registra a senha mestra com hash
+                    if (pass.length < 6) {
+                        showToast("A senha inicial deve conter pelo menos 6 caracteres.", "error");
+                        return;
+                    }
+                    localStorage.setItem('lestek_admin_hash', enteredHash);
+                    if (rememberMe) {
+                        localStorage.setItem('lestek_admin_session', 'authenticated');
+                    } else {
+                        sessionStorage.setItem('lestek_admin_session', 'authenticated');
+                    }
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    init();
+                    showToast("Senha administrativa inicial registrada com sucesso!");
+                    return;
+                }
+
+                if (enteredHash !== storedHash) {
+                    showToast("Senha de acesso incorreta.", "error");
+                    return;
+                }
+
                 if (rememberMe) {
-                    localStorage.setItem('lestek_local_admin', 'true');
+                    localStorage.setItem('lestek_admin_session', 'authenticated');
                 } else {
-                    sessionStorage.setItem('lestek_local_admin', 'true');
+                    sessionStorage.setItem('lestek_admin_session', 'authenticated');
                 }
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
                 init();
+                showToast("Login local autenticado!");
                 return;
             }
 
             try {
-                btn.textContent = 'Entrando...';
+                btn.textContent = 'Autenticando...';
                 btn.disabled = true;
-                
                 await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-                
                 await signInWithEmailAndPassword(auth, email, pass);
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
                 init();
+                showToast("Login efetuado com sucesso!");
             } catch (error) {
                 console.error("Login error:", error);
-                alert("Credenciais incorretas ou erro de login. " + error.message);
+                showToast("Credenciais incorretas ou erro de login.", "error");
                 btn.textContent = 'Entrar no Painel';
                 btn.disabled = false;
             }
         };
 
         window.logout = async () => {
+            localStorage.removeItem('lestek_admin_session');
+            sessionStorage.removeItem('lestek_admin_session');
             localStorage.removeItem('lestek_local_admin');
             sessionStorage.removeItem('lestek_local_admin');
             if (auth) {
@@ -488,10 +1021,21 @@
         };
 
         async function init() {
-            if (!isConfigured()) {
+            const isOnline = isConfigured();
+            const dot = document.getElementById('db-status-dot');
+            const text = document.getElementById('db-status-text');
+            const envLabel = document.getElementById('env-db-label');
+
+            if (!isOnline) {
                 document.getElementById('config-warn')?.classList.remove('hidden');
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+                if (text) text.innerText = 'Modo Local';
+                if (envLabel) { envLabel.innerText = 'Armazenamento Local'; envLabel.className = 'font-bold text-amber-400'; }
             } else {
                 document.getElementById('config-warn')?.classList.add('hidden');
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+                if (text) text.innerText = 'Online (Firebase)';
+                if (envLabel) { envLabel.innerText = 'Firebase Firestore'; envLabel.className = 'font-bold text-emerald-400'; }
             }
 
             currentContent = await fetchSiteContent();
@@ -540,9 +1084,8 @@
                 } catch(e) {}
             }
 
+            // Seed defaults if first run
             if (!currentContent['seeded_defaults']) {
-                document.getElementById('admin-panel').style.opacity = '0.5';
-                
                 const keysToSeed = Object.keys(defaultConfig).filter(k => k !== 'ebooks' && k !== 'services');
                 for (const key of keysToSeed) {
                     if (!currentContent[key] && defaultConfig[key]) {
@@ -568,38 +1111,31 @@
                 }
 
                 await updateSiteContent('seeded_defaults', 'true');
-                
                 currentContent = await fetchSiteContent();
                 currentServices = await fetchServices();
                 currentProducts = await fetchProducts();
-                
-                document.getElementById('admin-panel').style.opacity = '1';
-            } else {
-                // Fix old plain text entries in DB to include HTML tags
-                const fixes = {
-                    hero_title: "POTENCIALIZANDO O SEU FUTURO.",
-                    cta_title: "PRONTO PARA ACELERAR?",
-                    solutions_title: "SOLUÇÕES INTELIGENTES.",
-                    services_title: "Serviços Premium",
-                    ebooks_hero_title: "NOSSOS PRODUTOS"
-                };
-                let updated = false;
-                for (const [key, oldText] of Object.entries(fixes)) {
-                    if (currentContent[key] && currentContent[key].content === oldText) {
-                        await updateSiteContent(key, defaultConfig[key]);
-                        updated = true;
-                    }
-                }
-                if (updated) {
-                    currentContent = await fetchSiteContent();
-                }
             }
 
             renderAll();
         }
 
         function renderAll() {
-            // Fill inputs
+            // Stats
+            const statServices = document.getElementById('stat-services');
+            const statProducts = document.getElementById('stat-products');
+            const statFeatured = document.getElementById('stat-featured');
+            const statWhatsapp = document.getElementById('stat-whatsapp');
+            const badgeServices = document.getElementById('badge-services-count');
+            const badgeProducts = document.getElementById('badge-products-count');
+
+            if (statServices) statServices.innerText = currentServices.length;
+            if (statProducts) statProducts.innerText = currentProducts.length;
+            if (badgeServices) badgeServices.innerText = currentServices.length;
+            if (badgeProducts) badgeProducts.innerText = currentProducts.length;
+            if (statFeatured) statFeatured.innerText = currentFeaturedProducts.length;
+            if (statWhatsapp) statWhatsapp.innerText = currentContent.whatsapp?.content || defaultConfig.whatsapp || 'Não configurado';
+
+            // Fill text inputs
             document.querySelectorAll('[data-section]').forEach(input => {
                 const section = input.dataset.section;
                 if (currentContent[section]) {
@@ -608,9 +1144,13 @@
             });
 
             // Logo Preview
-            const logoPreview = document.getElementById('logo-preview');
-            if (currentContent.site_name && currentContent.site_name.image_url) {
-                logoPreview.innerHTML = `<img src="${currentContent.site_name.image_url}" class="w-full h-full object-contain p-2">`;
+            const logoPreviewBox = document.getElementById('logo-preview-box');
+            if (logoPreviewBox) {
+                if (currentContent.site_name && currentContent.site_name.image_url) {
+                    logoPreviewBox.innerHTML = `<img src="${currentContent.site_name.image_url}" class="w-full h-full object-contain p-2">`;
+                } else {
+                    logoPreviewBox.innerHTML = `<span class="text-zinc-600 text-xs font-bold">Sem Logo</span>`;
+                }
             }
 
             // Sections Order
@@ -618,141 +1158,262 @@
             if (sectionsList) {
                 sectionsList.innerHTML = '';
                 currentSectionsOrder.forEach((sec, index) => {
+                    const secInfo = sectionNames[sec] || { name: sec, icon: '📌' };
                     sectionsList.innerHTML += `
-                        <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-white/10">
-                            <span class="font-bold text-sm">${sectionNames[sec] || sec}</span>
-                            <div class="flex gap-2">
-                                <button onclick="moveSectionUp(${index})" class="p-2 bg-zinc-800 rounded hover:bg-zinc-700">↑</button>
-                                <button onclick="moveSectionDown(${index})" class="p-2 bg-zinc-800 rounded hover:bg-zinc-700">↓</button>
+                        <div class="flex items-center justify-between p-3.5 bg-black/40 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">${secInfo.icon}</span>
+                                <span class="font-bold text-xs text-white">${secInfo.name}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick="moveSectionUp(${index})" ${index === 0 ? 'disabled class="p-1.5 text-zinc-700 cursor-not-allowed"' : 'class="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded transition-colors"'}>↑</button>
+                                <button onclick="moveSectionDown(${index})" ${index === currentSectionsOrder.length - 1 ? 'disabled class="p-1.5 text-zinc-700 cursor-not-allowed"' : 'class="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded transition-colors"'}>↓</button>
                             </div>
                         </div>
                     `;
                 });
             }
 
-            // Services
+            // Services List
+            renderServicesList();
+
+            // Products List
+            renderProductsList();
+        }
+
+        window.filterServices = () => {
+            const query = (document.getElementById('search-services-input')?.value || '').toLowerCase();
+            renderServicesList(query);
+        };
+
+        function renderServicesList(filter = '') {
             const servicesList = document.getElementById('services-list');
+            if (!servicesList) return;
             servicesList.innerHTML = '';
-            currentServices.forEach(s => {
+
+            const filtered = currentServices.filter(s => 
+                (s.title || '').toLowerCase().includes(filter) || 
+                (s.description || '').toLowerCase().includes(filter)
+            );
+
+            if (filtered.length === 0) {
+                servicesList.innerHTML = `<div class="p-8 text-center text-zinc-500 text-xs font-medium">Nenhum serviço encontrado.</div>`;
+                return;
+            }
+
+            filtered.forEach((s, idx) => {
                 const item = document.createElement('div');
-                item.className = "flex justify-between items-center p-4 glass-card rounded-2xl";
+                item.className = "flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5 hover:border-white/10 gap-3 transition-colors";
+                const safeIcon = escapeHtml(s.icon || '🚀');
+                const safeTitle = escapeHtml(s.title);
+                const safeDesc = escapeHtml(s.description);
+                const safeId = escapeHtml(s.id);
+
                 item.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <span class="text-2xl">${s.icon}</span>
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl shrink-0">
+                            ${safeIcon}
+                        </div>
                         <div>
-                            <h4 class="font-black text-sm uppercase">${s.title}</h4>
-                            <p class="text-[10px] text-zinc-500">${s.description.substring(0, 40)}...</p>
+                            <h4 class="font-bold text-sm text-white">${safeTitle}</h4>
+                            <p class="text-xs text-zinc-400 line-clamp-1">${safeDesc}</p>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="moveServiceUp('${s.id}')" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">↑</button>
-                        <button onclick="moveServiceDown('${s.id}')" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">↓</button>
-                        <button onclick="editService('${s.id}')" class="text-blue-500 text-[10px] font-black uppercase ml-2">Editar</button>
-                        <button onclick="removeService('${s.id}')" class="text-red-500 text-[10px] font-black uppercase">Excluir</button>
+                    <div class="flex items-center gap-2 self-end sm:self-center">
+                        <button onclick="moveServiceUp('${safeId}')" title="Subir" class="p-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs transition-colors">↑</button>
+                        <button onclick="moveServiceDown('${safeId}')" title="Descer" class="p-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs transition-colors">↓</button>
+                        <button onclick="editService('${safeId}')" class="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold text-xs rounded-lg transition-colors">Editar</button>
+                        <button onclick="removeService('${safeId}')" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs rounded-lg transition-colors">Excluir</button>
                     </div>
                 `;
                 servicesList.appendChild(item);
             });
+        }
 
-            // Products
+        window.filterProducts = () => {
+            const query = (document.getElementById('search-products-input')?.value || '').toLowerCase();
+            renderProductsList(query);
+        };
+
+        function renderProductsList(filter = '') {
             const productsList = document.getElementById('products-list');
+            if (!productsList) return;
             productsList.innerHTML = '';
-            currentProducts.forEach(p => {
+
+            const filtered = currentProducts.filter(p => 
+                (p.name || '').toLowerCase().includes(filter) || 
+                (String(p.price) || '').includes(filter)
+            );
+
+            if (filtered.length === 0) {
+                productsList.innerHTML = `<div class="p-8 text-center text-zinc-500 text-xs font-medium col-span-full">Nenhum produto cadastrado.</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const isFeatured = currentFeaturedProducts.includes(p.id);
                 const item = document.createElement('div');
-                item.className = "p-4 glass-card rounded-2xl flex flex-col gap-4";
+                item.className = `p-4 rounded-xl border flex flex-col justify-between transition-all ${
+                    isFeatured 
+                        ? 'bg-yellow-950/20 border-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.1)]' 
+                        : 'bg-black/40 border-white/5 hover:border-white/10'
+                }`;
+
+                const safeName = escapeHtml(p.name);
+                const safePrice = escapeHtml(p.price);
+                const safeDesc = escapeHtml(p.description || 'Sem descrição');
+                const safeImg = sanitizeUrl(p.image_url, 'https://picsum.photos/seed/ebook/600/800');
+                const safeId = escapeHtml(p.id);
+
                 item.innerHTML = `
-                    <div class="flex gap-4 items-center">
-                        <img src="${p.image_url}" class="w-12 h-12 rounded-lg object-cover bg-white/5">
-                        <div class="flex-1">
-                            <h4 class="font-black text-xs uppercase">${p.name}</h4>
-                            <p class="text-blue-500 font-black text-xs">R$ ${p.price}</p>
+                    <div>
+                        <div class="flex gap-3 items-center mb-3">
+                            <div class="w-14 h-14 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/10">
+                                <img src="${safeImg}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <h4 class="font-bold text-xs text-white truncate">${safeName}</h4>
+                                    ${isFeatured ? '<span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 shrink-0">Destaque</span>' : ''}
+                                </div>
+                                <p class="text-sm font-black text-emerald-400 mt-0.5">R$ ${safePrice}</p>
+                            </div>
                         </div>
+                        <p class="text-[11px] text-zinc-400 line-clamp-2 mb-4">${safeDesc}</p>
                     </div>
-                    <div class="flex gap-4 border-t border-white/5 pt-4 items-center">
-                        <div class="flex gap-2">
-                            <button onclick="moveProductUp('${p.id}')" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">↑</button>
-                            <button onclick="moveProductDown('${p.id}')" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">↓</button>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-white/5 text-xs gap-1">
+                        <div class="flex gap-1">
+                            <button onclick="moveProductUp('${safeId}')" title="Subir" class="p-1.5 bg-white/5 hover:bg-white/10 rounded text-zinc-300 transition-colors">↑</button>
+                            <button onclick="moveProductDown('${safeId}')" title="Descer" class="p-1.5 bg-white/5 hover:bg-white/10 rounded text-zinc-300 transition-colors">↓</button>
                         </div>
-                        <button onclick="featureProduct('${p.id}')" class="flex-1 ${currentFeaturedProducts.includes(p.id) ? 'text-yellow-500' : 'text-zinc-500'} text-[10px] font-black uppercase text-center hover:text-yellow-400 transition-colors">★ Destaque</button>
-                        <button onclick="editProduct('${p.id}')" class="flex-1 text-blue-500 text-[10px] font-black uppercase text-right">Editar</button>
-                        <button onclick="removeProduct('${p.id}')" class="flex-1 text-red-500 text-[10px] font-black uppercase text-left">Excluir</button>
+                        <button onclick="featureProduct('${safeId}')" class="px-2 py-1 rounded text-[11px] font-bold ${
+                            isFeatured ? 'bg-yellow-500/20 text-yellow-400' : 'text-zinc-500 hover:text-yellow-400'
+                        }">
+                            ★ ${isFeatured ? 'Destaque' : 'Destacar'}
+                        </button>
+                        <div class="flex gap-1.5">
+                            <button onclick="editProduct('${safeId}')" class="text-blue-400 hover:text-blue-300 font-bold text-xs">Editar</button>
+                            <button onclick="removeProduct('${safeId}')" class="text-red-400 hover:text-red-300 font-bold text-xs">Excluir</button>
+                        </div>
                     </div>
                 `;
                 productsList.appendChild(item);
             });
         }
 
-        window.saveGeneralContent = async () => {
-            const btn = event.target;
+        // Section Saver Generic
+        async function saveFields(fieldIds, btn, label) {
             btn.innerText = "Salvando...";
             btn.disabled = true;
 
             try {
-                const inputs = document.querySelectorAll('[data-section]');
-                for (const input of inputs) {
-                    const section = input.dataset.section;
-                    const content = input.value;
-                    await updateSiteContent(section, content);
+                for (const id of fieldIds) {
+                    const el = document.getElementById(id);
+                    if (el && el.dataset.section) {
+                        await updateSiteContent(el.dataset.section, el.value);
+                    }
                 }
-                alert("Conteúdo salvo com sucesso!");
-                init();
+                showToast(`${label} salvo com sucesso!`);
+                await init();
             } catch (e) {
-                alert("Erro ao salvar: " + e.message);
+                showToast("Erro ao salvar: " + e.message, "error");
             } finally {
-                btn.innerText = "Salvar Conteúdo Geral";
+                btn.innerText = label;
                 btn.disabled = false;
             }
+        }
+
+        window.saveIdentityContent = (btn) => {
+            saveFields(['site_name', 'whatsapp', 'contact_link', 'pix_key', 'pix_name', 'pix_city', 'instagram'], btn, 'Salvar Contatos');
+        };
+
+        window.saveHomeContent = (btn) => {
+            saveFields(['hero_badge', 'hero_title', 'hero_subtitle', 'hero_btn1', 'hero_btn2', 'cta_badge', 'cta_title', 'cta_subtitle', 'cta_btn'], btn, 'Salvar Home');
+        };
+
+        window.savePagesContent = (btn) => {
+            saveFields([
+                'search_hero_badge', 'search_btn', 'search_hero_title', 'search_hero_subtitle', 'search_privacy',
+                'solutions_badge', 'solutions_title', 'solutions_subtitle',
+                'solutions_card1_title', 'solutions_card1_btn', 'solutions_card1_desc',
+                'solutions_card2_title', 'solutions_card2_btn', 'solutions_card2_desc',
+                'footer_about', 'footer_rights'
+            ], btn, 'Salvar Conteúdo');
+        };
+
+        window.saveWarrantyContent = (btn) => {
+            saveFields(['warranty_title', 'warranty_subtitle', 'support_title', 'support_subtitle', 'access_title', 'access_subtitle'], btn, 'Salvar Garantias');
         };
 
         // Logo Upload
-        document.getElementById('logo-upload').addEventListener('change', async (e) => {
+        document.getElementById('logo-upload')?.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            const logoPreview = document.getElementById('logo-preview');
-            logoPreview.innerHTML = `<span class="text-blue-500 animate-pulse text-[10px] font-black">ENVIANDO...</span>`;
+            const box = document.getElementById('logo-preview-box');
+            box.innerHTML = `<span class="text-blue-400 font-bold text-xs animate-pulse">Enviando...</span>`;
 
             try {
                 const url = await uploadImage(file);
-                // Save logo URL to site_content under 'site_name' or a specific 'logo' section
-                await updateSiteContent('site_name', document.getElementById('site_name').value || 'LESTEK', url);
-                alert("Logo atualizada com sucesso!");
+                const currentSiteName = document.getElementById('site_name')?.value || 'LESTEK';
+                await updateSiteContent('site_name', currentSiteName, url);
+                showToast("Logotipo atualizado com sucesso!");
                 init();
             } catch (err) {
-                alert("Erro no upload: " + err.message);
+                showToast("Erro ao enviar logotipo: " + err.message, "error");
                 init();
             }
         });
 
-        // Product Image Upload
+        // Product Modal Image Preview
+        window.updateProductImagePreview = (url) => {
+            const img = document.getElementById('product-image-preview');
+            const empty = document.getElementById('product-image-preview-empty');
+            if (url && url.trim() !== '') {
+                img.src = url;
+                img.classList.remove('hidden');
+                empty.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                empty.classList.remove('hidden');
+            }
+        };
+
+        // Product File Upload
         document.getElementById('product-image-file')?.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+
             const input = document.getElementById('product-image');
-            const oldVal = input.value;
-            input.value = "Processando imagem...";
+            input.value = "Processando upload...";
             try {
                 const url = await uploadImage(file);
-                input.value = url || oldVal;
+                input.value = url;
+                updateProductImagePreview(url);
+                showToast("Imagem carregada!");
             } catch (err) {
-                alert("Erro ao carregar imagem: " + err.message);
-                input.value = oldVal;
+                showToast("Erro no upload da imagem: " + err.message, "error");
+                input.value = '';
             }
         });
 
-        // Modais Helpers
+        // Modais
         window.openServiceModal = (id = null) => {
             const modal = document.getElementById('service-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
+            const titleEl = document.getElementById('service-modal-title');
             if (id) {
+                titleEl.innerText = "Editar Serviço";
                 const s = currentServices.find(x => x.id === id);
                 document.getElementById('service-id').value = s.id;
                 document.getElementById('service-title').value = s.title;
                 document.getElementById('service-desc').value = s.description;
                 document.getElementById('service-icon').value = s.icon;
             } else {
+                titleEl.innerText = "Novo Serviço";
                 document.getElementById('service-id').value = '';
                 document.getElementById('service-title').value = '';
                 document.getElementById('service-desc').value = '';
@@ -765,21 +1426,26 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
+            const titleEl = document.getElementById('product-modal-title');
             if (id) {
+                titleEl.innerText = "Editar Produto";
                 const p = currentProducts.find(x => x.id === id);
                 document.getElementById('product-id').value = p.id;
                 document.getElementById('product-name').value = p.name;
                 document.getElementById('product-desc').value = p.description || '';
                 document.getElementById('product-price').value = p.price;
-                document.getElementById('product-image').value = p.image_url;
+                document.getElementById('product-image').value = p.image_url || '';
                 document.getElementById('product-link').value = p.link || '';
+                updateProductImagePreview(p.image_url);
             } else {
+                titleEl.innerText = "Novo Produto";
                 document.getElementById('product-id').value = '';
                 document.getElementById('product-name').value = '';
                 document.getElementById('product-desc').value = '';
                 document.getElementById('product-price').value = '';
                 document.getElementById('product-image').value = 'https://picsum.photos/seed/ebook/600/800';
                 document.getElementById('product-link').value = '';
+                updateProductImagePreview('https://picsum.photos/seed/ebook/600/800');
             }
         };
 
@@ -789,65 +1455,100 @@
             modal.classList.remove('flex');
         };
 
-        window.saveServiceAction = async () => {
+        window.selectEmoji = (emoji) => {
+            const input = document.getElementById('service-icon');
+            if (input) input.value = emoji;
+        };
+
+        window.saveServiceAction = async (btn) => {
             const id = document.getElementById('service-id').value;
-            const service = {
-                title: document.getElementById('service-title').value,
-                description: document.getElementById('service-desc').value,
-                icon: document.getElementById('service-icon').value
-            };
-            if (id && id.trim() !== '') {
-                service.id = id;
+            const title = document.getElementById('service-title').value.trim();
+            const desc = document.getElementById('service-desc').value.trim();
+            const icon = document.getElementById('service-icon').value.trim() || '🚀';
+
+            if (!title) {
+                showToast("O título do serviço é obrigatório.", "error");
+                return;
             }
 
+            btn.disabled = true;
+            btn.innerText = "Salvando...";
+
             try {
+                const service = { title, description: desc, icon };
+                if (id) service.id = id;
                 await saveService(service);
                 closeModal('service-modal');
-                init();
-            } catch (e) { alert(e.message); }
+                showToast("Serviço salvo com sucesso!");
+                await init();
+            } catch (e) {
+                showToast("Erro: " + e.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Salvar Serviço";
+            }
         };
 
         window.removeService = async (id) => {
-            if (confirm("Excluir este serviço?")) {
+            if (confirm("Deseja realmente excluir este serviço?")) {
                 try {
                     await deleteService(id);
+                    showToast("Serviço removido com sucesso!");
                     init();
-                } catch (e) { alert(e.message); }
+                } catch (e) {
+                    showToast("Erro ao excluir: " + e.message, "error");
+                }
             }
         };
 
-        window.saveProductAction = async () => {
+        window.saveProductAction = async (btn) => {
             const id = document.getElementById('product-id').value;
-            const priceVal = document.getElementById('product-price').value.replace(',', '.');
-            const product = {
-                name: document.getElementById('product-name').value,
-                description: document.getElementById('product-desc').value,
-                price: parseFloat(priceVal) || 0,
-                image_url: document.getElementById('product-image').value,
-                link: document.getElementById('product-link').value
-            };
-            if (id && id.trim() !== '') {
-                product.id = id;
+            const name = document.getElementById('product-name').value.trim();
+            const desc = document.getElementById('product-desc').value.trim();
+            const priceVal = document.getElementById('product-price').value.replace(',', '.').trim();
+            const imageUrl = document.getElementById('product-image').value.trim();
+            const link = document.getElementById('product-link').value.trim();
+
+            if (!name) {
+                showToast("O nome do produto é obrigatório.", "error");
+                return;
             }
 
+            btn.disabled = true;
+            btn.innerText = "Salvando...";
+
             try {
+                const product = {
+                    name,
+                    description: desc,
+                    price: parseFloat(priceVal) || 0,
+                    image_url: imageUrl,
+                    link
+                };
+                if (id) product.id = id;
                 await saveProduct(product);
                 closeModal('product-modal');
-                init();
-            } catch (e) { alert(e.message); }
+                showToast("Produto salvo com sucesso!");
+                await init();
+            } catch (e) {
+                showToast("Erro: " + e.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Salvar Produto";
+            }
         };
 
         window.removeProduct = async (id) => {
-            if (confirm("Excluir este produto?")) {
+            if (confirm("Deseja realmente excluir este produto?")) {
                 try {
                     await deleteProduct(id);
+                    showToast("Produto removido com sucesso!");
                     init();
-                } catch (e) { alert(e.message); }
+                } catch (e) {
+                    showToast("Erro ao excluir: " + e.message, "error");
+                }
             }
         };
-
-        window.editService = (id) => openServiceModal(id);
-        window.editProduct = (id) => openProductModal(id);
 
         window.featureProduct = async (id) => {
             try {
@@ -857,13 +1558,17 @@
                     currentFeaturedProducts.push(id);
                 }
                 await updateSiteContent('featured_products', JSON.stringify(currentFeaturedProducts));
+                showToast("Status de destaque atualizado!");
                 init();
             } catch (e) {
-                alert("Erro ao destacar produto: " + e.message);
+                showToast("Erro ao destacar produto: " + e.message, "error");
             }
         };
 
-        // Reordering Logic
+        window.editService = (id) => openServiceModal(id);
+        window.editProduct = (id) => openProductModal(id);
+
+        // Reordering
         window.moveSectionUp = async (index) => {
             if (index > 0) {
                 const temp = currentSectionsOrder[index - 1];
@@ -871,6 +1576,7 @@
                 currentSectionsOrder[index] = temp;
                 renderAll();
                 await updateSiteContent('sections_order', JSON.stringify(currentSectionsOrder));
+                showToast("Ordem das seções atualizada!");
             }
         };
 
@@ -881,6 +1587,7 @@
                 currentSectionsOrder[index] = temp;
                 renderAll();
                 await updateSiteContent('sections_order', JSON.stringify(currentSectionsOrder));
+                showToast("Ordem das seções atualizada!");
             }
         };
 
@@ -930,6 +1637,62 @@
                 const order = currentProducts.map(p => p.id);
                 await updateSiteContent('products_order', JSON.stringify(order));
             }
+        };
+
+        window.testWhatsAppLink = () => {
+            const num = document.getElementById('whatsapp')?.value || '5577999587570';
+            window.open(`https://wa.me/${num}?text=Olá!%20Teste%20do%20painel%20LESTEK.`, '_blank');
+        };
+
+        window.testInstagramLink = () => {
+            const user = document.getElementById('instagram')?.value || 'dudu.santos___';
+            window.open(`https://instagram.com/${user}`, '_blank');
+        };
+
+        window.copyFirestoreRules = () => {
+            const rules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permite leitura pública apenas para o catálogo do site
+    match /site_content/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Bloqueia qualquer outra coleção não especificada por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}`;
+            navigator.clipboard.writeText(rules);
+            showToast("Regras seguras copiadas! Cole no Firebase Console > Firestore > Regras.");
+        };
+
+        window.exportBackupData = () => {
+            const backup = {
+                exported_at: new Date().toISOString(),
+                content: currentContent,
+                services: currentServices,
+                products: currentProducts,
+                featured_products: currentFeaturedProducts,
+                sections_order: currentSectionsOrder
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lestek-backup-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Backup JSON gerado e baixado com sucesso!");
         };
 
     </script>
