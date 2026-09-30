@@ -1058,30 +1058,40 @@
 
             if (currentContent['services_order']) {
                 try {
-                    const order = JSON.parse(currentContent['services_order'].content);
-                    currentServices.sort((a, b) => {
-                        const indexA = order.indexOf(a.id);
-                        const indexB = order.indexOf(b.id);
-                        if (indexA === -1 && indexB === -1) return 0;
-                        if (indexA === -1) return 1;
-                        if (indexB === -1) return -1;
-                        return indexA - indexB;
-                    });
-                } catch(e) {}
+                    const raw = currentContent['services_order'].content || currentContent['services_order'];
+                    const order = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                    if (Array.isArray(order) && order.length > 0) {
+                        currentServices.sort((a, b) => {
+                            const indexA = order.indexOf(a.id);
+                            const indexB = order.indexOf(b.id);
+                            if (indexA === -1 && indexB === -1) return 0;
+                            if (indexA === -1) return 1;
+                            if (indexB === -1) return -1;
+                            return indexA - indexB;
+                        });
+                    }
+                } catch(e) {
+                    console.warn("Error sorting services:", e);
+                }
             }
 
             if (currentContent['products_order']) {
                 try {
-                    const order = JSON.parse(currentContent['products_order'].content);
-                    currentProducts.sort((a, b) => {
-                        const indexA = order.indexOf(a.id);
-                        const indexB = order.indexOf(b.id);
-                        if (indexA === -1 && indexB === -1) return 0;
-                        if (indexA === -1) return 1;
-                        if (indexB === -1) return -1;
-                        return indexA - indexB;
-                    });
-                } catch(e) {}
+                    const raw = currentContent['products_order'].content || currentContent['products_order'];
+                    const order = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                    if (Array.isArray(order) && order.length > 0) {
+                        currentProducts.sort((a, b) => {
+                            const indexA = order.indexOf(a.id);
+                            const indexB = order.indexOf(b.id);
+                            if (indexA === -1 && indexB === -1) return 0;
+                            if (indexA === -1) return 1;
+                            if (indexB === -1) return -1;
+                            return indexA - indexB;
+                        });
+                    }
+                } catch(e) {
+                    console.warn("Error sorting products:", e);
+                }
             }
 
             // Seed defaults if first run
@@ -1094,19 +1104,29 @@
                 }
 
                 if (currentServices.length === 0) {
+                    const seededServicesOrder = [];
                     for (const s of defaultConfig.services) {
-                        await saveService({ title: s.title, description: s.description, icon: s.icon });
+                        const saved = await saveService({ title: s.title, description: s.description, icon: s.icon });
+                        if (saved && saved.id) seededServicesOrder.push(saved.id);
+                    }
+                    if (seededServicesOrder.length > 0) {
+                        await updateSiteContent('services_order', JSON.stringify(seededServicesOrder));
                     }
                 }
 
                 if (currentProducts.length === 0) {
+                    const seededProductsOrder = [];
                     for (const p of defaultConfig.ebooks) {
-                        await saveProduct({
+                        const saved = await saveProduct({
                             name: p.title,
                             price: parseFloat(p.price.replace(',', '.')),
                             image_url: p.image,
                             link: p.link || ''
                         });
+                        if (saved && saved.id) seededProductsOrder.push(saved.id);
+                    }
+                    if (seededProductsOrder.length > 0) {
+                        await updateSiteContent('products_order', JSON.stringify(seededProductsOrder));
                     }
                 }
 
@@ -1114,6 +1134,18 @@
                 currentContent = await fetchSiteContent();
                 currentServices = await fetchServices();
                 currentProducts = await fetchProducts();
+            } else {
+                // Ensure products_order exists if products are present
+                if (!currentContent['products_order'] && currentProducts.length > 0) {
+                    const order = currentProducts.map(p => p.id);
+                    currentContent['products_order'] = { content: JSON.stringify(order) };
+                    await updateSiteContent('products_order', JSON.stringify(order));
+                }
+                if (!currentContent['services_order'] && currentServices.length > 0) {
+                    const order = currentServices.map(s => s.id);
+                    currentContent['services_order'] = { content: JSON.stringify(order) };
+                    await updateSiteContent('services_order', JSON.stringify(order));
+                }
             }
 
             renderAll();
@@ -1201,7 +1233,10 @@
                 return;
             }
 
-            filtered.forEach((s, idx) => {
+            filtered.forEach((s) => {
+                const realIdx = currentServices.findIndex(x => x.id === s.id);
+                const isFirst = realIdx === 0;
+                const isLast = realIdx === currentServices.length - 1;
                 const item = document.createElement('div');
                 item.className = "flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5 hover:border-white/10 gap-3 transition-colors";
                 const safeIcon = escapeHtml(s.icon || '🚀');
@@ -1211,6 +1246,7 @@
 
                 item.innerHTML = `
                     <div class="flex items-center gap-3.5">
+                        <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">#${realIdx + 1}</span>
                         <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl shrink-0">
                             ${safeIcon}
                         </div>
@@ -1220,10 +1256,10 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 self-end sm:self-center">
-                        <button onclick="moveServiceUp('${safeId}')" title="Subir" class="p-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs transition-colors">↑</button>
-                        <button onclick="moveServiceDown('${safeId}')" title="Descer" class="p-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs transition-colors">↓</button>
-                        <button onclick="editService('${safeId}')" class="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold text-xs rounded-lg transition-colors">Editar</button>
-                        <button onclick="removeService('${safeId}')" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs rounded-lg transition-colors">Excluir</button>
+                        <button onclick="moveServiceUp('${safeId}')" title="Subir" ${isFirst ? 'disabled class="p-2 opacity-30 cursor-not-allowed text-zinc-600 rounded-lg text-xs"' : 'class="p-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs transition-colors cursor-pointer"'}>↑</button>
+                        <button onclick="moveServiceDown('${safeId}')" title="Descer" ${isLast ? 'disabled class="p-2 opacity-30 cursor-not-allowed text-zinc-600 rounded-lg text-xs"' : 'class="p-2 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-lg text-xs transition-colors cursor-pointer"'}>↓</button>
+                        <button onclick="editService('${safeId}')" class="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-bold text-xs rounded-lg transition-colors cursor-pointer">Editar</button>
+                        <button onclick="removeService('${safeId}')" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs rounded-lg transition-colors cursor-pointer">Excluir</button>
                     </div>
                 `;
                 servicesList.appendChild(item);
@@ -1250,7 +1286,10 @@
                 return;
             }
 
-            filtered.forEach(p => {
+            filtered.forEach((p) => {
+                const realIdx = currentProducts.findIndex(x => x.id === p.id);
+                const isFirst = realIdx === 0;
+                const isLast = realIdx === currentProducts.length - 1;
                 const isFeatured = currentFeaturedProducts.includes(p.id);
                 const item = document.createElement('div');
                 item.className = `p-4 rounded-xl border flex flex-col justify-between transition-all ${
@@ -1268,8 +1307,9 @@
                 item.innerHTML = `
                     <div>
                         <div class="flex gap-3 items-center mb-3">
-                            <div class="w-14 h-14 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/10">
+                            <div class="w-14 h-14 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/10 relative">
                                 <img src="${safeImg}" class="w-full h-full object-cover">
+                                <span class="absolute top-1 left-1 text-[9px] font-mono font-black bg-black/80 px-1 rounded text-blue-400 border border-white/10">#${realIdx + 1}</span>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-1.5">
@@ -1283,9 +1323,10 @@
                     </div>
 
                     <div class="flex items-center justify-between pt-3 border-t border-white/5 text-xs gap-1">
-                        <div class="flex gap-1">
-                            <button onclick="moveProductUp('${safeId}')" title="Subir" class="p-1.5 bg-white/5 hover:bg-white/10 rounded text-zinc-300 transition-colors">↑</button>
-                            <button onclick="moveProductDown('${safeId}')" title="Descer" class="p-1.5 bg-white/5 hover:bg-white/10 rounded text-zinc-300 transition-colors">↓</button>
+                        <div class="flex gap-1 items-center">
+                            <button onclick="moveProductUp('${safeId}')" title="Subir" ${isFirst ? 'disabled class="p-1.5 opacity-30 cursor-not-allowed text-zinc-600 rounded"' : 'class="p-1.5 bg-white/5 hover:bg-white/10 rounded text-zinc-300 transition-colors cursor-pointer"'}>↑</button>
+                            <button onclick="moveProductDown('${safeId}')" title="Descer" ${isLast ? 'disabled class="p-1.5 opacity-30 cursor-not-allowed text-zinc-600 rounded"' : 'class="p-1.5 bg-white/5 hover:bg-white/10 rounded text-zinc-300 transition-colors cursor-pointer"'}>↓</button>
+                            <span class="text-[10px] text-zinc-500 font-mono ml-0.5">Pos #${realIdx + 1}</span>
                         </div>
                         <button onclick="featureProduct('${safeId}')" class="px-2 py-1 rounded text-[11px] font-bold ${
                             isFeatured ? 'bg-yellow-500/20 text-yellow-400' : 'text-zinc-500 hover:text-yellow-400'
@@ -1293,8 +1334,8 @@
                             ★ ${isFeatured ? 'Destaque' : 'Destacar'}
                         </button>
                         <div class="flex gap-1.5">
-                            <button onclick="editProduct('${safeId}')" class="text-blue-400 hover:text-blue-300 font-bold text-xs">Editar</button>
-                            <button onclick="removeProduct('${safeId}')" class="text-red-400 hover:text-red-300 font-bold text-xs">Excluir</button>
+                            <button onclick="editProduct('${safeId}')" class="text-blue-400 hover:text-blue-300 font-bold text-xs cursor-pointer">Editar</button>
+                            <button onclick="removeProduct('${safeId}')" class="text-red-400 hover:text-red-300 font-bold text-xs cursor-pointer">Excluir</button>
                         </div>
                     </div>
                 `;
@@ -1477,7 +1518,15 @@
             try {
                 const service = { title, description: desc, icon };
                 if (id) service.id = id;
-                await saveService(service);
+                const saved = await saveService(service);
+                if (!id && saved && saved.id) {
+                    const order = currentServices.map(s => s.id);
+                    if (!order.includes(saved.id)) {
+                        order.push(saved.id);
+                        currentContent['services_order'] = { content: JSON.stringify(order) };
+                        await updateSiteContent('services_order', JSON.stringify(order));
+                    }
+                }
                 closeModal('service-modal');
                 showToast("Serviço salvo com sucesso!");
                 await init();
@@ -1493,8 +1542,11 @@
             if (confirm("Deseja realmente excluir este serviço?")) {
                 try {
                     await deleteService(id);
+                    const order = currentServices.map(s => s.id).filter(x => x !== id);
+                    currentContent['services_order'] = { content: JSON.stringify(order) };
+                    await updateSiteContent('services_order', JSON.stringify(order));
                     showToast("Serviço removido com sucesso!");
-                    init();
+                    await init();
                 } catch (e) {
                     showToast("Erro ao excluir: " + e.message, "error");
                 }
@@ -1526,7 +1578,15 @@
                     link
                 };
                 if (id) product.id = id;
-                await saveProduct(product);
+                const saved = await saveProduct(product);
+                if (!id && saved && saved.id) {
+                    const order = currentProducts.map(p => p.id);
+                    if (!order.includes(saved.id)) {
+                        order.push(saved.id);
+                        currentContent['products_order'] = { content: JSON.stringify(order) };
+                        await updateSiteContent('products_order', JSON.stringify(order));
+                    }
+                }
                 closeModal('product-modal');
                 showToast("Produto salvo com sucesso!");
                 await init();
@@ -1542,8 +1602,11 @@
             if (confirm("Deseja realmente excluir este produto?")) {
                 try {
                     await deleteProduct(id);
+                    const order = currentProducts.map(p => p.id).filter(x => x !== id);
+                    currentContent['products_order'] = { content: JSON.stringify(order) };
+                    await updateSiteContent('products_order', JSON.stringify(order));
                     showToast("Produto removido com sucesso!");
-                    init();
+                    await init();
                 } catch (e) {
                     showToast("Erro ao excluir: " + e.message, "error");
                 }
@@ -1599,7 +1662,13 @@
                 currentServices[index] = temp;
                 renderAll();
                 const order = currentServices.map(s => s.id);
-                await updateSiteContent('services_order', JSON.stringify(order));
+                currentContent['services_order'] = { content: JSON.stringify(order) };
+                try {
+                    await updateSiteContent('services_order', JSON.stringify(order));
+                    showToast("Ordem dos serviços atualizada!");
+                } catch(e) {
+                    showToast("Erro ao salvar ordem dos serviços: " + e.message, "error");
+                }
             }
         };
 
@@ -1611,7 +1680,13 @@
                 currentServices[index] = temp;
                 renderAll();
                 const order = currentServices.map(s => s.id);
-                await updateSiteContent('services_order', JSON.stringify(order));
+                currentContent['services_order'] = { content: JSON.stringify(order) };
+                try {
+                    await updateSiteContent('services_order', JSON.stringify(order));
+                    showToast("Ordem dos serviços atualizada!");
+                } catch(e) {
+                    showToast("Erro ao salvar ordem dos serviços: " + e.message, "error");
+                }
             }
         };
 
@@ -1623,7 +1698,13 @@
                 currentProducts[index] = temp;
                 renderAll();
                 const order = currentProducts.map(p => p.id);
-                await updateSiteContent('products_order', JSON.stringify(order));
+                currentContent['products_order'] = { content: JSON.stringify(order) };
+                try {
+                    await updateSiteContent('products_order', JSON.stringify(order));
+                    showToast("Ordem dos produtos atualizada!");
+                } catch(e) {
+                    showToast("Erro ao salvar ordem dos produtos: " + e.message, "error");
+                }
             }
         };
 
@@ -1635,7 +1716,13 @@
                 currentProducts[index] = temp;
                 renderAll();
                 const order = currentProducts.map(p => p.id);
-                await updateSiteContent('products_order', JSON.stringify(order));
+                currentContent['products_order'] = { content: JSON.stringify(order) };
+                try {
+                    await updateSiteContent('products_order', JSON.stringify(order));
+                    showToast("Ordem dos produtos atualizada!");
+                } catch(e) {
+                    showToast("Erro ao salvar ordem dos produtos: " + e.message, "error");
+                }
             }
         };
 

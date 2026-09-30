@@ -417,22 +417,14 @@ async function init() {
         }
       });
 
-      if (mergedConfig.seeded_defaults === 'true') {
-        mergedConfig.services = services || [];
-        mergedConfig.ebooks = (products || []).map(p => ({
-          id: p.id,
-          title: p.name,
-          description: p.description,
-          price: p.price,
-          image: p.image_url,
-          link: p.link || '#'
-        }));
-      } else {
-        if (services && services.length > 0) {
-          let sortedServices = [...services];
-          if (currentConfig.services_order) {
-            try {
-              const order = JSON.parse(currentConfig.services_order.content || currentConfig.services_order);
+      // Services Sorting & Processing
+      if (services && services.length > 0) {
+        let sortedServices = [...services];
+        const rawServicesOrder = mergedConfig.services_order;
+        if (rawServicesOrder) {
+          try {
+            const order = typeof rawServicesOrder === 'string' ? JSON.parse(rawServicesOrder) : rawServicesOrder;
+            if (Array.isArray(order) && order.length > 0) {
               sortedServices.sort((a, b) => {
                 const indexA = order.indexOf(a.id);
                 const indexB = order.indexOf(b.id);
@@ -441,18 +433,24 @@ async function init() {
                 if (indexB === -1) return -1;
                 return indexA - indexB;
               });
-            } catch(e) {}
+            }
+          } catch(e) {
+            console.warn("Error parsing services_order:", e);
           }
-          mergedConfig.services = sortedServices;
-        } else {
-          mergedConfig.services = defaultConfig.services;
         }
-        
-        if (products && products.length > 0) {
-          let sortedProducts = [...products];
-          if (currentConfig.products_order) {
-            try {
-              const order = JSON.parse(currentConfig.products_order.content || currentConfig.products_order);
+        mergedConfig.services = sortedServices;
+      } else {
+        mergedConfig.services = defaultConfig.services;
+      }
+
+      // Products Sorting & Processing
+      if (products && products.length > 0) {
+        let sortedProducts = [...products];
+        const rawProductsOrder = mergedConfig.products_order;
+        if (rawProductsOrder) {
+          try {
+            const order = typeof rawProductsOrder === 'string' ? JSON.parse(rawProductsOrder) : rawProductsOrder;
+            if (Array.isArray(order) && order.length > 0) {
               sortedProducts.sort((a, b) => {
                 const indexA = order.indexOf(a.id);
                 const indexB = order.indexOf(b.id);
@@ -461,19 +459,21 @@ async function init() {
                 if (indexB === -1) return -1;
                 return indexA - indexB;
               });
-            } catch(e) {}
+            }
+          } catch(e) {
+            console.warn("Error parsing products_order:", e);
           }
-          mergedConfig.ebooks = sortedProducts.map(p => ({
-            id: p.id,
-            title: p.name,
-            description: p.description,
-            price: p.price,
-            image: p.image_url,
-            link: p.link || '#'
-          }));
-        } else {
-          mergedConfig.ebooks = defaultConfig.ebooks;
         }
+        mergedConfig.ebooks = sortedProducts.map(p => ({
+          id: p.id,
+          title: p.name,
+          description: p.description,
+          price: typeof p.price === 'number' ? p.price.toFixed(2).replace('.', ',') : String(p.price || '0,00'),
+          image: p.image_url,
+          link: p.link || '#'
+        }));
+      } else {
+        mergedConfig.ebooks = defaultConfig.ebooks;
       }
       
       // Update current config and re-render with fetched data

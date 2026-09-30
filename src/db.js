@@ -134,6 +134,7 @@ export async function saveService(service) {
     console.error("Error saving service:", error);
     throw new Error("Erro de permissão no Firebase: " + error.message);
   }
+  return service;
 }
 
 export async function deleteService(id) {
@@ -172,6 +173,7 @@ export async function saveProduct(product) {
     console.error("Error saving product:", error);
     throw new Error("Erro de permissão no Firebase: " + error.message);
   }
+  return product;
 }
 
 export async function deleteProduct(id) {
