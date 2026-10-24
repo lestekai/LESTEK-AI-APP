@@ -783,55 +783,362 @@
     </div>
 
     <!-- MODAL DE PRODUTO -->
-    <div id="product-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
-        <div class="max-w-lg w-full admin-card p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="product-modal-title" class="text-xl font-black uppercase tracking-tight text-white">Editar Produto</h3>
-                <button onclick="closeModal('product-modal')" class="text-zinc-400 hover:text-white p-2">✕</button>
+    <div id="product-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="max-w-2xl w-full admin-card p-6 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scrollbar border border-white/10">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-lg">
+                        📦
+                    </div>
+                    <div>
+                        <h3 id="product-modal-title" class="text-xl font-black uppercase tracking-tight text-white">Editar Produto</h3>
+                        <p class="text-xs text-zinc-400">Configure detalhes, galeria de fotos e modelo 3D interativo.</p>
+                    </div>
+                </div>
+                <button onclick="closeProductModalAction()" class="text-zinc-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">✕</button>
             </div>
 
             <input type="hidden" id="product-id">
 
-            <div class="space-y-4">
-                <div>
-                    <label class="input-label">Nome do Produto / Licença</label>
-                    <input type="text" id="product-name" placeholder="Ex: Licença Windows 11 Pro" class="input-dark">
-                </div>
-
-                <div>
-                    <label class="input-label">Preço (R$)</label>
-                    <input type="text" id="product-price" placeholder="47,00" class="input-dark font-bold text-emerald-400">
+            <div class="space-y-6">
+                <!-- Informações Básicas -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="input-label">Nome do Produto / Licença</label>
+                        <input type="text" id="product-name" placeholder="Ex: Licença Windows 11 Pro" class="input-dark">
+                    </div>
+                    <div>
+                        <label class="input-label">Preço (R$)</label>
+                        <input type="text" id="product-price" placeholder="47,00" class="input-dark font-bold text-emerald-400">
+                    </div>
                 </div>
 
                 <div>
                     <label class="input-label">Descrição</label>
-                    <textarea id="product-desc" rows="3" placeholder="Informações adicionais do produto..." class="input-dark"></textarea>
-                </div>
-
-                <div>
-                    <label class="input-label">Imagem do Produto</label>
-                    <div class="flex gap-2 mb-2">
-                        <input type="text" id="product-image" placeholder="URL da Imagem ou faça upload" oninput="updateProductImagePreview(this.value)" class="input-dark flex-1">
-                        <input type="file" id="product-image-file" accept="image/*" class="hidden">
-                        <button type="button" onclick="document.getElementById('product-image-file').click()" class="px-4 py-2 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-bold shrink-0 transition-colors">
-                            Upload
-                        </button>
-                    </div>
-                    <!-- Live Image Preview -->
-                    <div class="w-full h-32 rounded-xl bg-black/50 border border-white/10 flex items-center justify-center overflow-hidden">
-                        <img id="product-image-preview" src="" alt="Preview" class="w-full h-full object-contain p-2 hidden">
-                        <span id="product-image-preview-empty" class="text-zinc-600 text-xs font-medium">Pré-visualização da imagem</span>
-                    </div>
+                    <textarea id="product-desc" rows="2" placeholder="Informações adicionais do produto..." class="input-dark"></textarea>
                 </div>
 
                 <div>
                     <label class="input-label">Link de Checkout / Compra Direta (Opcional)</label>
-                    <input type="text" id="product-link" placeholder="Ex: https://kiwify.com.br/... (Deixe vazio para enviar ao WhatsApp)" class="input-dark">
+                    <input type="text" id="product-link" placeholder="Ex: https://kiwify.com.br/... (Deixe vazio para enviar ao WhatsApp)" class="input-dark text-xs">
+                </div>
+
+                <!-- SEÇÃO 1: GALERIA DE IMAGENS -->
+                <div class="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-black text-white uppercase tracking-tight">Galeria de Fotos</span>
+                                <span id="gallery-counter-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">0 fotos</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-400 mt-0.5">Envie fotos de diferentes ângulos. A foto com <span class="text-yellow-400">★</span> é a principal e será a <strong>vista frontal</strong> para o 3D.</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <input type="file" id="product-images-files" accept="image/jpeg,image/png,image/webp" multiple class="hidden">
+                            <button type="button" onclick="document.getElementById('product-images-files').click()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer">
+                                <span>+ Upload Fotos</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Input para adicionar por URL -->
+                    <div class="flex gap-2">
+                        <input type="text" id="product-add-image-url" placeholder="Ou cole a URL da imagem (https://...)" class="input-dark text-xs flex-1">
+                        <button type="button" onclick="addImageUrlAction()" class="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer text-zinc-200">
+                            Adicionar
+                        </button>
+                    </div>
+
+                    <!-- Upload progress indicator -->
+                    <div id="gallery-upload-progress" class="hidden">
+                        <div class="flex items-center justify-between text-[11px] text-blue-400 font-mono mb-1">
+                            <span id="gallery-upload-status-text">Processando imagens...</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500 animate-pulse w-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Thumbnails Grid -->
+                    <div id="product-gallery-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                        <!-- Injetado dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- SEÇÃO 2: MODELO 3D INTERATIVO -->
+                <div class="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-black text-white uppercase tracking-tight">Modelo 3D Interativo</span>
+                                <span id="model-3d-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-white/5">
+                                    Nenhum
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-zinc-400 mt-0.5">Gere o arquivo 3D .GLB automaticamente no navegador ou faça upload/escolha um modelo pronto.</p>
+                        </div>
+
+                        <!-- Checkbox Publicar 3D -->
+                        <label class="inline-flex items-center gap-2 cursor-pointer bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 transition-colors">
+                            <input type="checkbox" id="model-3d-published-toggle" class="rounded bg-zinc-900 border-white/20 text-blue-500 focus:ring-0">
+                            <span class="text-xs font-bold text-white">Publicar no Catálogo</span>
+                        </label>
+                    </div>
+
+                    <!-- CARD EM DESTAQUE: GERADOR 3D AUTOMÁTICO EMBUTIDO (100% GRATUITO NO NAVEGADOR) -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-950/70 via-indigo-950/50 to-black border border-blue-500/40 space-y-3.5 shadow-xl">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-blue-400 font-black text-xs uppercase tracking-wider">✦ Gerador 3D Automático Embutido</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% Grátis no Navegador</span>
+                            </div>
+                            <span class="text-[10px] text-zinc-400 font-mono">Sem APIs • Sem Chaves • Instântaneo</span>
+                        </div>
+                        <p class="text-xs text-zinc-300 leading-relaxed">
+                            Cria o modelo 3D <strong class="text-white">.GLB</strong> interativo diretamente com Three.js usando as fotos enviadas. Após gerar, descarta automaticamente as imagens adicionais se desejado, mantendo somente a foto de capa.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="input-label">Formato 3D do Produto (Form Factor)</label>
+                                <select id="auto-3d-form-factor" class="input-dark !py-2 text-xs">
+                                    <option value="device">Dispositivo / Aparelho Tech (Smartphone/Tablet/Box)</option>
+                                    <option value="box">Box / Embalagem Volumétrica</option>
+                                    <option value="hardware">Hardware / Placa / Equipamento</option>
+                                    <option value="standee">Display / Totem Expositivo</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="input-label">Fotos de Referência para o 3D</label>
+                                <div class="flex flex-col gap-1.5 text-[11px] text-zinc-300 bg-black/50 p-2.5 rounded-xl border border-white/10">
+                                    <div class="flex items-center justify-between">
+                                        <span>• Frontal:</span>
+                                        <span class="text-yellow-400 font-bold text-[10px]">Foto Principal ★ (Galeria)</span>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1 border-t border-white/5">
+                                        <span>• Verso (Opcional):</span>
+                                        <input type="file" id="auto-3d-back-file" accept="image/*" class="hidden">
+                                        <button type="button" onclick="document.getElementById('auto-3d-back-file').click()" id="auto-3d-back-btn" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer">
+                                            + Selecionar Foto Verso
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1 border-t border-white/5">
+                                        <span>• Lateral (Opcional):</span>
+                                        <input type="file" id="auto-3d-side-file" accept="image/*" class="hidden">
+                                        <button type="button" onclick="document.getElementById('auto-3d-side-file').click()" id="auto-3d-side-btn" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer">
+                                            + Selecionar Foto Lateral
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2 gap-3 flex-wrap border-t border-white/10">
+                            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-200">
+                                <input type="checkbox" id="auto-3d-discard-photos" checked class="rounded bg-zinc-900 border-white/20 text-blue-500 focus:ring-0 cursor-pointer">
+                                <span>Descartar fotos adicionais após gerar o 3D (manter apenas foto de capa)</span>
+                            </label>
+
+                            <button type="button" id="btn-generate-auto-3d" onclick="generate3DModelFromPhotosAction()" class="w-full sm:w-auto py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <span id="btn-generate-auto-3d-icon">✦</span>
+                                <span id="btn-generate-auto-3d-label">Gerar Modelo 3D .GLB Agora</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Métodos de Adição 3D (100% Gratuito em Destaque) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Card 1: Upload Direto Gratuito -->
+                        <div class="p-3.5 rounded-xl bg-gradient-to-br from-blue-950/40 to-indigo-950/20 border border-blue-500/30 flex flex-col justify-between space-y-2">
+                            <div>
+                                <div class="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wide">
+                                    <span class="text-blue-400">📁</span> Upload de Arquivo .GLB
+                                    <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% Grátis</span>
+                                </div>
+                                <p class="text-[11px] text-zinc-400 mt-1">Envie qualquer arquivo 3D (.glb ou .gltf) do computador ou celular sem precisar de chave nem cadastro.</p>
+                            </div>
+                            <input type="file" id="product-model-3d-file" accept=".glb,.gltf" class="hidden">
+                            <button type="button" onclick="document.getElementById('product-model-3d-file').click()" class="w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-blue-600/20">
+                                <span>📤</span> Selecionar Arquivo .GLB
+                            </button>
+                        </div>
+
+                        <!-- Card 2: Modelos Prontos 1-Clique -->
+                        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-2">
+                            <div>
+                                <div class="flex items-center gap-1.5 text-xs font-black text-white uppercase tracking-wide">
+                                    <span class="text-amber-400">⚡</span> Biblioteca Pronta
+                                    <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">1 Clique</span>
+                                </div>
+                                <p class="text-[11px] text-zinc-400 mt-1">Escolha modelos 3D realistas de tecnologia para testar ou usar imediatamente no produto.</p>
+                            </div>
+                            <button type="button" onclick="togglePreset3DBox()" class="w-full py-2 px-3 rounded-lg bg-white/10 hover:bg-white/15 text-zinc-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span>🎯</span> Ver Modelos Prontos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Biblioteca de Presets (Recolhível) -->
+                    <div id="presets-3d-box" class="hidden p-3.5 rounded-xl bg-zinc-900/90 border border-white/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black uppercase tracking-wider text-white">Selecione um Modelo 3D Demonstrativo:</span>
+                            <button type="button" onclick="togglePreset3DBox()" class="text-zinc-400 hover:text-white text-xs">✕ Fechar</button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <button type="button" onclick="selectPresetModel3D('cyber_helmet')" class="p-2.5 rounded-lg bg-black/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/40 text-left transition-all cursor-pointer group">
+                                <div class="text-base mb-1">🪖</div>
+                                <div class="text-[11px] font-bold text-white group-hover:text-blue-300">Capacete Cyber</div>
+                                <div class="text-[9px] text-zinc-500 font-mono">PBR Detalhado</div>
+                            </button>
+                            <button type="button" onclick="selectPresetModel3D('boombox')" class="p-2.5 rounded-lg bg-black/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/40 text-left transition-all cursor-pointer group">
+                                <div class="text-base mb-1">📻</div>
+                                <div class="text-[11px] font-bold text-white group-hover:text-blue-300">Sound Box Tech</div>
+                                <div class="text-[9px] text-zinc-500 font-mono">PBR Hardware</div>
+                            </button>
+                            <button type="button" onclick="selectPresetModel3D('camera')" class="p-2.5 rounded-lg bg-black/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/40 text-left transition-all cursor-pointer group">
+                                <div class="text-base mb-1">📷</div>
+                                <div class="text-[11px] font-bold text-white group-hover:text-blue-300">Câmera Pro</div>
+                                <div class="text-[9px] text-zinc-500 font-mono">Lentes & Metal</div>
+                            </button>
+                            <button type="button" onclick="selectPresetModel3D('scifi_helmet')" class="p-2.5 rounded-lg bg-black/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/40 text-left transition-all cursor-pointer group">
+                                <div class="text-base mb-1">🔮</div>
+                                <div class="text-[11px] font-bold text-white group-hover:text-blue-300">Dispositivo Sci-Fi</div>
+                                <div class="text-[9px] text-zinc-500 font-mono">Holográfico</div>
+                            </button>
+                            <button type="button" onclick="selectPresetModel3D('car')" class="p-2.5 rounded-lg bg-black/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/40 text-left transition-all cursor-pointer group">
+                                <div class="text-base mb-1">🏎️</div>
+                                <div class="text-[11px] font-bold text-white group-hover:text-blue-300">Veículo Tech</div>
+                                <div class="text-[9px] text-zinc-500 font-mono">Aerodinâmico</div>
+                            </button>
+                            <button type="button" onclick="selectPresetModel3D('lantern')" class="p-2.5 rounded-lg bg-black/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/40 text-left transition-all cursor-pointer group">
+                                <div class="text-base mb-1">🏮</div>
+                                <div class="text-[11px] font-bold text-white group-hover:text-blue-300">Lâmpada Tech</div>
+                                <div class="text-[9px] text-zinc-500 font-mono">Vidro & Metal</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação Secundários & Ajuda -->
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <button type="button" onclick="toggleFree3DGuide()" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                            <span>💡</span> Como Criar Modelos 3D Grátis (Guia)
+                        </button>
+                        
+                        <button type="button" onclick="toggleManualGlbInput()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-300 rounded-xl text-xs font-bold transition-colors cursor-pointer">
+                            🔗 Inserir URL .GLB
+                        </button>
+
+                        <button type="button" id="btn-generate-3d" onclick="generate3DWithMeshyAction()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5">
+                            <span id="btn-generate-3d-icon">✨</span>
+                            <span id="btn-generate-3d-label">Gerar com IA Meshy (Opcional)</span>
+                        </button>
+
+                        <button type="button" id="btn-remove-3d" onclick="removeModel3DAction()" class="hidden px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition-colors cursor-pointer ml-auto">
+                            Remover 3D
+                        </button>
+                    </div>
+
+                    <!-- Guia 100% Gratuito de Criação de Modelos 3D (Recolhível) -->
+                    <div id="free-3d-guide-box" class="hidden p-4 rounded-xl bg-gradient-to-b from-emerald-950/30 to-black/60 border border-emerald-500/30 space-y-3">
+                        <div class="flex items-center justify-between border-b border-emerald-500/20 pb-2">
+                            <div class="flex items-center gap-2 text-xs font-black uppercase text-emerald-400 tracking-wide">
+                                <span>🚀</span> 4 Formas Gratuitas de Criar ou Obter Modelos 3D Sem Gastar Nada
+                            </div>
+                            <button type="button" onclick="toggleFree3DGuide()" class="text-zinc-400 hover:text-white text-xs">✕</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-zinc-300">
+                            <div class="p-3 rounded-lg bg-black/40 border border-white/5 space-y-1">
+                                <div class="font-black text-white flex items-center gap-1.5">
+                                    <span class="text-emerald-400">1.</span> Tripo3D (IA Gratuita no Navegador)
+                                </div>
+                                <p class="text-[11px] text-zinc-400 leading-relaxed">
+                                    Acesse <strong>tripo3d.ai</strong>, envie fotos do seu produto. Ele gera a malha 3D em ~30 segundos com créditos gratuitos diários. Baixe o arquivo <strong>.GLB</strong> e clique no botão azul <strong>"Upload de Arquivo .GLB"</strong> acima.
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-black/40 border border-white/5 space-y-1">
+                                <div class="font-black text-white flex items-center gap-1.5">
+                                    <span class="text-emerald-400">2.</span> Kiri Engine / Polycam (Aplicativo de Celular)
+                                </div>
+                                <p class="text-[11px] text-zinc-400 leading-relaxed">
+                                    Baixe o app <strong>Kiri Engine</strong> ou <strong>Polycam</strong> (Android/iOS). Posicione o produto real na mesa e tire 20 fotos ou grave um vídeo em volta. O app gera o modelo 3D real por fotogrametria e permite exportar em <strong>.GLB</strong>.
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-black/40 border border-white/5 space-y-1">
+                                <div class="font-black text-white flex items-center gap-1.5">
+                                    <span class="text-emerald-400">3.</span> Poly Pizza & Sketchfab (Bibliotecas Gratuitas)
+                                </div>
+                                <p class="text-[11px] text-zinc-400 leading-relaxed">
+                                    No <strong>poly.pizza</strong> ou no Sketchfab (filtro Free / Downloadable), pesquise o produto (ex: "laptop", "mouse", "headset", "box", "gadget") e baixe o modelo em formato <strong>.GLB</strong>.
+                                </p>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-black/40 border border-white/5 space-y-1">
+                                <div class="font-black text-white flex items-center gap-1.5">
+                                    <span class="text-emerald-400">4.</span> Upload com 1 Clique na LESTEK
+                                </div>
+                                <p class="text-[11px] text-zinc-400 leading-relaxed">
+                                    Assim que tiver o arquivo <strong>.glb</strong> no seu computador ou celular, basta clicar no botão azul <strong>"Upload de Arquivo .GLB"</strong> acima. O visualizador 3D abre na hora e você já pode publicar no catálogo!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Manual GLB (recolhível) -->
+                    <div id="manual-glb-box" class="hidden p-3 rounded-xl bg-zinc-900/60 border border-white/10 space-y-2">
+                        <label class="text-[11px] font-bold text-zinc-300">URL Direta do Modelo .GLB</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="manual-glb-url" placeholder="https://exemplo.com/modelo.glb" class="input-dark text-xs flex-1">
+                            <button type="button" onclick="applyManualGlbAction()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer">
+                                Carregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status de Tarefa / Progresso -->
+                    <div id="model-3d-progress-box" class="hidden p-3 rounded-xl bg-blue-950/20 border border-blue-500/20 space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span id="model-3d-progress-label" class="font-bold text-blue-400">Gerando modelo 3D...</span>
+                            <span id="model-3d-progress-percent" class="font-mono text-zinc-300">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                            <div id="model-3d-progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300" style="width: 5%"></div>
+                        </div>
+                        <p id="model-3d-progress-hint" class="text-[10px] text-zinc-400">Você pode continuar editando outros campos enquanto a tarefa é processada.</p>
+                    </div>
+
+                    <!-- Preview 3D Interativo no Admin -->
+                    <div id="admin-viewer3d-wrapper" class="hidden space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Pré-visualização 3D Interativa:</span>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="adminViewer3DResetCamera()" class="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-zinc-300 cursor-pointer">
+                                    Resetar
+                                </button>
+                                <button type="button" onclick="adminViewer3DToggleAutoRotate()" class="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-zinc-300 cursor-pointer">
+                                    Girar
+                                </button>
+                                <button type="button" onclick="adminViewer3DToggleWireframe()" class="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-zinc-300 cursor-pointer">
+                                    Wireframe
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="admin-viewer3d-container" class="w-full h-56 rounded-2xl bg-zinc-950/90 border border-white/15 overflow-hidden relative shadow-inner">
+                            <div id="admin-viewer3d-loading" class="absolute inset-0 flex items-center justify-center bg-black/60 z-10 hidden">
+                                <span class="text-xs font-bold text-blue-400 animate-pulse">Carregando visualizador 3D...</span>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-zinc-500 text-center">Clique e arraste para rotacionar em 360° • Scroll do mouse para zoom</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex gap-3 mt-8">
-                <button type="button" onclick="closeModal('product-modal')" class="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-xs uppercase tracking-wider text-zinc-300 transition-colors">
+            <!-- Botões de Ação do Modal -->
+            <div class="flex gap-3 mt-8 pt-4 border-t border-white/10">
+                <button type="button" onclick="closeProductModalAction()" class="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-xs uppercase tracking-wider text-zinc-300 transition-colors cursor-pointer">
                     Cancelar
                 </button>
                 <button type="button" onclick="saveProductAction(this)" class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-black text-xs uppercase tracking-wider text-white shadow-lg shadow-blue-600/30 transition-all cursor-pointer">
@@ -854,11 +1161,14 @@
             saveProduct, 
             deleteProduct,
             uploadImage,
+            upload3DModel,
             auth
         } from './src/db.js';
         import { defaultConfig } from './src/main.js';
         import { escapeHtml, sanitizeHtml, sanitizeUrl, sha256 } from './src/lib/security.js';
         import { signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
+        import { create3DViewer } from './src/lib/viewer3d.ts';
+        import { buildGlbFromProductImages } from './src/lib/glb-builder.ts';
 
         let currentContent = {};
         let currentServices = [];
@@ -1119,6 +1429,7 @@
                     for (const p of defaultConfig.ebooks) {
                         const saved = await saveProduct({
                             name: p.title,
+                            description: p.description || 'Produto exclusivo de alta performance.',
                             price: parseFloat(p.price.replace(',', '.')),
                             image_url: p.image,
                             link: p.link || ''
@@ -1304,6 +1615,10 @@
                 const safeImg = sanitizeUrl(p.image_url, 'https://picsum.photos/seed/ebook/600/800');
                 const safeId = escapeHtml(p.id);
 
+                const has3D = p.model_3d && p.model_3d.glb_url;
+                const is3DPublished = has3D && p.model_3d.published !== false;
+                const imgCount = (p.images && p.images.length > 0) ? p.images.length : (p.image_url ? 1 : 0);
+
                 item.innerHTML = `
                     <div>
                         <div class="flex gap-3 items-center mb-3">
@@ -1312,11 +1627,17 @@
                                 <span class="absolute top-1 left-1 text-[9px] font-mono font-black bg-black/80 px-1 rounded text-blue-400 border border-white/10">#${realIdx + 1}</span>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5">
+                                <div class="flex items-center gap-1.5 flex-wrap">
                                     <h4 class="font-bold text-xs text-white truncate">${safeName}</h4>
                                     ${isFeatured ? '<span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 shrink-0">Destaque</span>' : ''}
+                                    ${has3D ? (is3DPublished 
+                                        ? '<span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 shrink-0">✦ 3D Ativo</span>' 
+                                        : '<span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-white/5 shrink-0">✦ 3D Rascunho</span>') : ''}
                                 </div>
-                                <p class="text-sm font-black text-emerald-400 mt-0.5">R$ ${safePrice}</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <p class="text-sm font-black text-emerald-400">R$ ${safePrice}</p>
+                                    <span class="text-[10px] text-zinc-500 font-mono">${imgCount} ${imgCount === 1 ? 'foto' : 'fotos'}</span>
+                                </div>
                             </div>
                         </div>
                         <p class="text-[11px] text-zinc-400 line-clamp-2 mb-4">${safeDesc}</p>
@@ -1407,39 +1728,781 @@
             }
         });
 
-        // Product Modal Image Preview
-        window.updateProductImagePreview = (url) => {
-            const img = document.getElementById('product-image-preview');
-            const empty = document.getElementById('product-image-preview-empty');
-            if (url && url.trim() !== '') {
-                img.src = url;
-                img.classList.remove('hidden');
-                empty.classList.add('hidden');
-            } else {
-                img.classList.add('hidden');
-                empty.classList.remove('hidden');
+        // ==========================================
+        // GALERIA DE FOTOS E STUDIO 3D DO PRODUTO
+        // ==========================================
+        let modalProductImages = [];
+        let modalPrimaryImageIndex = 0;
+        let modalProduct3D = {
+            status: 'none',
+            task_id: null,
+            progress: 0,
+            glb_url: null,
+            thumbnail_url: null,
+            published: true,
+            error_message: null
+        };
+        let activeAdmin3DViewer = null;
+        let meshyPollInterval = null;
+
+        function getAngleHint(index) {
+            const hints = [
+                '1. Vista Frontal (★ Principal)',
+                '2. Lateral / Perfil',
+                '3. Traseira / Verso',
+                '4. Topo / Superior',
+                '5. Detalhe / Close',
+                '6. Ângulo Perspectiva'
+            ];
+            return hints[index] || `${index + 1}. Detalhe`;
+        }
+
+        window.renderModalGallery = () => {
+            const container = document.getElementById('product-gallery-container');
+            const counter = document.getElementById('gallery-counter-badge');
+            if (!container) return;
+
+            container.innerHTML = '';
+            if (counter) {
+                counter.innerText = `${modalProductImages.length} ${modalProductImages.length === 1 ? 'foto' : 'fotos'}`;
+            }
+
+            if (modalProductImages.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full p-6 text-center border border-dashed border-white/10 rounded-xl bg-zinc-900/40">
+                        <span class="text-xs text-zinc-500 font-medium">Nenhuma foto adicionada. Faça upload ou cole uma URL acima.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            modalProductImages.forEach((url, idx) => {
+                const isPrimary = idx === modalPrimaryImageIndex;
+                const card = document.createElement('div');
+                card.className = `relative rounded-xl border overflow-hidden group transition-all flex flex-col ${
+                    isPrimary 
+                        ? 'border-yellow-500/60 bg-yellow-950/20 shadow-[0_0_15px_rgba(234,179,8,0.15)] ring-1 ring-yellow-500/40' 
+                        : 'border-white/10 bg-zinc-900/60 hover:border-white/20'
+                }`;
+
+                const safeUrl = sanitizeUrl(url, 'https://picsum.photos/seed/ebook/600/800');
+                const angleText = getAngleHint(idx);
+
+                card.innerHTML = `
+                    <div class="aspect-square w-full relative bg-black/60 overflow-hidden flex items-center justify-center">
+                        <img src="${safeUrl}" class="w-full h-full object-cover">
+                        <span class="absolute top-1.5 left-1.5 text-[9px] font-mono font-black px-1.5 py-0.5 rounded ${
+                            isPrimary ? 'bg-yellow-500 text-black' : 'bg-black/80 text-white border border-white/10'
+                        }">#${idx + 1}</span>
+
+                        ${isPrimary ? '<span class="absolute top-1.5 right-1.5 text-xs text-yellow-400 drop-shadow">★ Principal</span>' : ''}
+                    </div>
+
+                    <div class="p-2 border-t border-white/5 flex flex-col gap-1.5 text-[10px]">
+                        <span class="text-zinc-400 truncate font-mono text-[9px]">${angleText}</span>
+                        
+                        <div class="flex items-center justify-between gap-1 pt-1 border-t border-white/5">
+                            <button type="button" onclick="setPrimaryImage(${idx})" title="Definir como Principal (Vista Frontal)" class="p-1 rounded text-xs transition-colors cursor-pointer ${
+                                isPrimary ? 'text-yellow-400 font-black' : 'text-zinc-500 hover:text-yellow-400'
+                            }">
+                                ★
+                            </button>
+
+                            <div class="flex items-center gap-0.5">
+                                <button type="button" onclick="moveGalleryImage(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-20 text-zinc-600 p-1"' : 'class="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"'} title="Mover para esquerda">
+                                    ←
+                                </button>
+                                <button type="button" onclick="moveGalleryImage(${idx}, 1)" ${idx === modalProductImages.length - 1 ? 'disabled class="opacity-20 text-zinc-600 p-1"' : 'class="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"'} title="Mover para direita">
+                                    →
+                                </button>
+                            </div>
+
+                            <button type="button" onclick="removeGalleryImage(${idx})" class="p-1 text-red-400 hover:text-red-300 transition-colors cursor-pointer" title="Remover imagem">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        };
+
+        window.setPrimaryImage = (index) => {
+            if (index >= 0 && index < modalProductImages.length) {
+                modalPrimaryImageIndex = index;
+                renderModalGallery();
             }
         };
 
-        // Product File Upload
-        document.getElementById('product-image-file')?.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        window.moveGalleryImage = (index, direction) => {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= modalProductImages.length) return;
 
-            const input = document.getElementById('product-image');
-            input.value = "Processando upload...";
+            const item = modalProductImages[index];
+            modalProductImages.splice(index, 1);
+            modalProductImages.splice(newIndex, 0, item);
+
+            // Ajusta o ponteiro da imagem principal
+            if (modalPrimaryImageIndex === index) {
+                modalPrimaryImageIndex = newIndex;
+            } else if (modalPrimaryImageIndex === newIndex) {
+                modalPrimaryImageIndex = index;
+            }
+
+            renderModalGallery();
+        };
+
+        window.removeGalleryImage = (index) => {
+            if (index < 0 || index >= modalProductImages.length) return;
+            modalProductImages.splice(index, 1);
+            if (modalPrimaryImageIndex >= modalProductImages.length) {
+                modalPrimaryImageIndex = Math.max(0, modalProductImages.length - 1);
+            }
+            renderModalGallery();
+        };
+
+        window.addImageUrlAction = () => {
+            const input = document.getElementById('product-add-image-url');
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) {
+                showToast("Informe uma URL de imagem válida.", "error");
+                return;
+            }
+            modalProductImages.push(val);
+            input.value = '';
+            renderModalGallery();
+            showToast("Imagem adicionada à galeria!");
+        };
+
+        // Upload de Múltiplos Arquivos
+        document.getElementById('product-images-files')?.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files || []);
+            if (files.length === 0) return;
+
+            const progressBox = document.getElementById('gallery-upload-progress');
+            const statusText = document.getElementById('gallery-upload-status-text');
+            if (progressBox) progressBox.classList.remove('hidden');
+
             try {
-                const url = await uploadImage(file);
-                input.value = url;
-                updateProductImagePreview(url);
-                showToast("Imagem carregada!");
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (statusText) statusText.innerText = `Processando foto ${i + 1} de ${files.length}...`;
+                    const url = await uploadImage(file);
+                    if (url) {
+                        modalProductImages.push(url);
+                    }
+                }
+                showToast(`${files.length} foto(s) adicionada(s) à galeria!`);
             } catch (err) {
-                showToast("Erro no upload da imagem: " + err.message, "error");
-                input.value = '';
+                showToast("Erro no upload de imagens: " + err.message, "error");
+            } finally {
+                if (progressBox) progressBox.classList.add('hidden');
+                e.target.value = '';
+                renderModalGallery();
             }
         });
 
-        // Modais
+        // ==========================================
+        // 3D VIEWER & MESHY INTEGRATION
+        // ==========================================
+        window.updateModel3DUI = () => {
+            const statusBadge = document.getElementById('model-3d-status-badge');
+            const togglePublished = document.getElementById('model-3d-published-toggle');
+            const btnRemove = document.getElementById('btn-remove-3d');
+            const btnGen = document.getElementById('btn-generate-3d');
+            const btnGenLabel = document.getElementById('btn-generate-3d-label');
+            const progressBox = document.getElementById('model-3d-progress-box');
+            const progressBar = document.getElementById('model-3d-progress-bar');
+            const progressPct = document.getElementById('model-3d-progress-percent');
+            const progressLabel = document.getElementById('model-3d-progress-label');
+            const previewWrapper = document.getElementById('admin-viewer3d-wrapper');
+
+            const status = modalProduct3D.status || 'none';
+            const hasGlb = !!modalProduct3D.glb_url;
+
+            if (togglePublished) {
+                togglePublished.checked = modalProduct3D.published !== false && hasGlb;
+                togglePublished.disabled = !hasGlb;
+            }
+
+            if (btnRemove) {
+                if (hasGlb || status === 'processing') {
+                    btnRemove.classList.remove('hidden');
+                } else {
+                    btnRemove.classList.add('hidden');
+                }
+            }
+
+            if (status === 'processing') {
+                if (statusBadge) {
+                    statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30';
+                    statusBadge.innerText = `Processando (${modalProduct3D.progress || 0}%)`;
+                }
+                if (btnGen) btnGen.disabled = true;
+                if (btnGenLabel) btnGenLabel.innerText = "Gerando em 2º plano...";
+                if (progressBox) progressBox.classList.remove('hidden');
+                if (progressBar) progressBar.style.width = `${Math.max(5, modalProduct3D.progress || 10)}%`;
+                if (progressPct) progressPct.innerText = `${modalProduct3D.progress || 0}%`;
+                if (progressLabel) progressLabel.innerText = `Reconstruindo malha 3D (Tarefa #${modalProduct3D.task_id ? modalProduct3D.task_id.substring(0, 8) : '...'})`;
+            } else if (status === 'succeeded' || hasGlb) {
+                if (statusBadge) {
+                    statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                    statusBadge.innerText = '✓ Modelo 3D Pronto';
+                }
+                if (btnGen) btnGen.disabled = false;
+                if (btnGenLabel) btnGenLabel.innerText = "Regerar Modelo 3D";
+                if (progressBox) progressBox.classList.add('hidden');
+            } else if (status === 'failed') {
+                if (statusBadge) {
+                    statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30';
+                    statusBadge.innerText = 'Falha na geração';
+                }
+                if (btnGen) btnGen.disabled = false;
+                if (btnGenLabel) btnGenLabel.innerText = "Tentar Gerar Novamente";
+                if (progressBox) progressBox.classList.add('hidden');
+            } else {
+                if (statusBadge) {
+                    statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-800 text-zinc-400 border border-white/5';
+                    statusBadge.innerText = 'Nenhum';
+                }
+                if (btnGen) btnGen.disabled = false;
+                if (btnGenLabel) btnGenLabel.innerText = "Gerar Modelo 3D com IA";
+                if (progressBox) progressBox.classList.add('hidden');
+            }
+
+            // Preview 3D
+            if (hasGlb) {
+                if (previewWrapper) previewWrapper.classList.remove('hidden');
+                initAdmin3DViewer(modalProduct3D.glb_url);
+            } else {
+                if (previewWrapper) previewWrapper.classList.add('hidden');
+                destroyAdmin3DViewer();
+            }
+        };
+
+        window.initAdmin3DViewer = (glbUrl) => {
+            const container = document.getElementById('admin-viewer3d-container');
+            const loading = document.getElementById('admin-viewer3d-loading');
+            if (!container || !glbUrl) return;
+
+            destroyAdmin3DViewer();
+            if (loading) loading.classList.remove('hidden');
+
+            try {
+                activeAdmin3DViewer = create3DViewer({
+                    container,
+                    modelUrl: glbUrl,
+                    autoRotate: true,
+                    backgroundColor: 0x09090b,
+                    onLoaded: () => {
+                        if (loading) loading.classList.add('hidden');
+                    },
+                    onError: (err) => {
+                        if (loading) loading.classList.add('hidden');
+                        showToast("Não foi possível renderizar o arquivo 3D: " + err.message, "error");
+                    }
+                });
+            } catch (err) {
+                if (loading) loading.classList.add('hidden');
+                console.error("3D init error:", err);
+            }
+        };
+
+        window.destroyAdmin3DViewer = () => {
+            if (activeAdmin3DViewer) {
+                try {
+                    activeAdmin3DViewer.destroy();
+                } catch (e) {
+                    console.warn("Destroy 3D error:", e);
+                }
+                activeAdmin3DViewer = null;
+            }
+        };
+
+        window.adminViewer3DResetCamera = () => activeAdmin3DViewer?.resetCamera();
+        window.adminViewer3DToggleAutoRotate = () => activeAdmin3DViewer?.toggleAutoRotate();
+        window.adminViewer3DToggleWireframe = () => activeAdmin3DViewer?.toggleWireframe();
+
+        const PRESET_3D_MODELS = {
+            cyber_helmet: {
+                name: 'Capacete Cyber Tech',
+                url: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/DamagedHelmet/glTF-Binary/DamagedHelmet.glb'
+            },
+            boombox: {
+                name: 'Sound Box Tech',
+                url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/BoomBox/glTF-Binary/BoomBox.glb'
+            },
+            camera: {
+                name: 'Câmera Pro',
+                url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb'
+            },
+            scifi_helmet: {
+                name: 'Dispositivo Sci-Fi',
+                url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SciFiHelmet/glTF-Binary/SciFiHelmet.glb'
+            },
+            car: {
+                name: 'Veículo Tech',
+                url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb'
+            },
+            lantern: {
+                name: 'Lâmpada Tech',
+                url: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Lantern/glTF-Binary/Lantern.glb'
+            }
+        };
+
+        window.togglePreset3DBox = () => {
+            const box = document.getElementById('presets-3d-box');
+            if (box) box.classList.toggle('hidden');
+        };
+
+        window.toggleFree3DGuide = () => {
+            const box = document.getElementById('free-3d-guide-box');
+            if (box) box.classList.toggle('hidden');
+        };
+
+        window.selectPresetModel3D = (presetKey) => {
+            const preset = PRESET_3D_MODELS[presetKey];
+            if (!preset) return;
+            modalProduct3D = {
+                status: 'succeeded',
+                glb_url: preset.url,
+                thumbnail_url: modalProductImages[modalPrimaryImageIndex] || null,
+                published: true,
+                provider: 'preset',
+                preset_name: preset.name,
+                last_updated: new Date().toISOString()
+            };
+            togglePreset3DBox();
+            updateModel3DUI();
+            showToast(`Modelo 3D "${preset.name}" selecionado com sucesso!`);
+        };
+
+        // Upload direto de arquivo .glb / .gltf do dispositivo (100% Gratuito)
+        document.getElementById('product-model-3d-file')?.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            const isGlb = file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf');
+            if (!isGlb) {
+                showToast("Por favor selecione um arquivo em formato .GLB ou .GLTF", "error");
+                e.target.value = '';
+                return;
+            }
+
+            showToast("Processando arquivo 3D...", "info");
+            try {
+                const modelUrl = await upload3DModel(file);
+                modalProduct3D = {
+                    status: 'succeeded',
+                    glb_url: modelUrl,
+                    thumbnail_url: modalProductImages[modalPrimaryImageIndex] || null,
+                    published: true,
+                    provider: 'file_upload',
+                    file_name: file.name,
+                    last_updated: new Date().toISOString()
+                };
+                updateModel3DUI();
+                showToast(`Arquivo 3D "${file.name}" carregado com sucesso!`);
+            } catch (err) {
+                console.error("Upload 3D error:", err);
+                showToast("Erro ao carregar arquivo 3D: " + err.message, "error");
+            } finally {
+                e.target.value = '';
+            }
+        });
+
+        window.toggleManualGlbInput = () => {
+            const box = document.getElementById('manual-glb-box');
+            if (box) box.classList.toggle('hidden');
+        };
+
+        window.applyManualGlbAction = () => {
+            const input = document.getElementById('manual-glb-url');
+            if (!input) return;
+            const url = input.value.trim();
+            if (!url || !/^https?:\/\//i.test(url)) {
+                showToast("Informe uma URL de arquivo .glb válida.", "error");
+                return;
+            }
+            modalProduct3D = {
+                status: 'succeeded',
+                glb_url: url,
+                thumbnail_url: modalProductImages[modalPrimaryImageIndex] || null,
+                published: true,
+                provider: 'manual',
+                last_updated: new Date().toISOString()
+            };
+            input.value = '';
+            toggleManualGlbInput();
+            updateModel3DUI();
+            showToast("Modelo 3D vinculado com sucesso!");
+        };
+
+        // ==========================================
+        // GERADOR 3D AUTOMÁTICO EMBUTIDO (THREE.JS / GLTFEXPORTER)
+        // ==========================================
+        let auto3DBackFile = null;
+        let auto3DSideFile = null;
+
+        document.getElementById('auto-3d-back-file')?.addEventListener('change', (e) => {
+            auto3DBackFile = e.target.files?.[0] || null;
+            const btn = document.getElementById('auto-3d-back-btn');
+            if (btn) btn.innerText = auto3DBackFile ? `✓ ${auto3DBackFile.name}` : '+ Selecionar Foto Verso';
+        });
+
+        document.getElementById('auto-3d-side-file')?.addEventListener('change', (e) => {
+            auto3DSideFile = e.target.files?.[0] || null;
+            const btn = document.getElementById('auto-3d-side-btn');
+            if (btn) btn.innerText = auto3DSideFile ? `✓ ${auto3DSideFile.name}` : '+ Selecionar Foto Lateral';
+        });
+
+        window.generate3DModelFromPhotosAction = async () => {
+            if (modalProductImages.length === 0) {
+                showToast("Adicione pelo menos 1 foto na galeria do produto para servir de capa frontal.", "error");
+                return;
+            }
+
+            const frontImageUrl = modalProductImages[modalPrimaryImageIndex] || modalProductImages[0];
+            const formFactor = document.getElementById('auto-3d-form-factor')?.value || 'device';
+            const productName = document.getElementById('product-name')?.value.trim() || 'produto';
+            const discardPhotos = document.getElementById('auto-3d-discard-photos')?.checked ?? true;
+
+            const backImage = auto3DBackFile || (modalProductImages.length > 1 ? modalProductImages[1] : null);
+            const sideImage = auto3DSideFile || (modalProductImages.length > 2 ? modalProductImages[2] : null);
+
+            const btn = document.getElementById('btn-generate-auto-3d');
+            const icon = document.getElementById('btn-generate-auto-3d-icon');
+            const label = document.getElementById('btn-generate-auto-3d-label');
+
+            if (btn) btn.disabled = true;
+            if (icon) icon.innerText = "⏳";
+            if (label) label.innerText = "Sintetizando 3D no navegador...";
+
+            try {
+                const result = await buildGlbFromProductImages({
+                    frontImage: frontImageUrl,
+                    backImage,
+                    sideImage,
+                    formFactor,
+                    productName,
+                    onProgress: (step, pct) => {
+                        if (label) label.innerText = `${step} (${pct}%)`;
+                    }
+                });
+
+                const fileFromBlob = new File([result.blob], result.fileName, { type: 'model/gltf-binary' });
+                const modelUrl = await upload3DModel(fileFromBlob);
+
+                modalProduct3D = {
+                    status: 'succeeded',
+                    glb_url: modelUrl,
+                    thumbnail_url: frontImageUrl,
+                    published: true,
+                    provider: 'browser_auto_glb',
+                    file_name: result.fileName,
+                    last_updated: new Date().toISOString()
+                };
+
+                // Descartar fotos adicionais se marcado, mantendo apenas a foto principal de capa
+                if (discardPhotos) {
+                    modalProductImages = [frontImageUrl];
+                    modalPrimaryImageIndex = 0;
+                    renderModalGallery();
+                }
+
+                auto3DBackFile = null;
+                auto3DSideFile = null;
+                const backBtn = document.getElementById('auto-3d-back-btn');
+                const sideBtn = document.getElementById('auto-3d-side-btn');
+                if (backBtn) backBtn.innerText = '+ Selecionar Foto Verso';
+                if (sideBtn) sideBtn.innerText = '+ Selecionar Foto Lateral';
+
+                updateModel3DUI();
+                showToast(`🎉 Modelo 3D .GLB gerado com sucesso! ${discardPhotos ? 'Fotos adicionais descartadas (mantida foto de capa).' : ''}`);
+            } catch (err) {
+                console.error("Error generating 3D model:", err);
+                showToast("Erro ao gerar modelo 3D no navegador: " + err.message, "error");
+            } finally {
+                if (btn) btn.disabled = false;
+                if (icon) icon.innerText = "✦";
+                if (label) label.innerText = "Gerar Modelo 3D .GLB Agora";
+            }
+        };
+
+        window.removeModel3DAction = () => {
+            if (confirm("Deseja realmente desvincular o modelo 3D deste produto?")) {
+                if (meshyPollInterval) {
+                    clearInterval(meshyPollInterval);
+                    meshyPollInterval = null;
+                }
+                modalProduct3D = {
+                    status: 'none',
+                    task_id: null,
+                    progress: 0,
+                    glb_url: null,
+                    thumbnail_url: null,
+                    published: false,
+                    error_message: null
+                };
+                updateModel3DUI();
+                showToast("Modelo 3D removido do produto.");
+            }
+        };
+
+        window.generate3DWithMeshyAction = async () => {
+            if (modalProductImages.length === 0) {
+                showToast("Adicione pelo menos 1 imagem na galeria para gerar o modelo 3D.", "error");
+                return;
+            }
+
+            // Preparar as imagens: vista frontal (principal) primeiro, depois até outras 3 imagens
+            const frontImage = modalProductImages[modalPrimaryImageIndex];
+            const otherImages = modalProductImages.filter((_, idx) => idx !== modalPrimaryImageIndex);
+            const orderedImages = [frontImage, ...otherImages].slice(0, 4);
+
+            // Verificar se são URLs http/https públicas
+            for (const url of orderedImages) {
+                if (!/^https?:\/\//i.test(url)) {
+                    showToast("Meshy requer URLs HTTP/HTTPS públicas. Imagens locais em base64 não são aceitas pela API.", "error");
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('btn-generate-3d');
+            const icon = document.getElementById('btn-generate-3d-icon');
+            const label = document.getElementById('btn-generate-3d-label');
+            if (btn) btn.disabled = true;
+            if (icon) icon.innerText = "⏳";
+            if (label) label.innerText = "Iniciando tarefa...";
+
+            try {
+                // Tenta endpoint da Netlify Function ou fallback de rota
+                const endpoint = '/.netlify/functions/meshy-create';
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_urls: orderedImages,
+                        ai_model: 'meshy-4',
+                        enable_pbr: true,
+                        topology: 'triangle'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Erro HTTP ${response.status}`);
+                }
+
+                const taskId = data.result || data.task_id;
+                modalProduct3D = {
+                    status: 'processing',
+                    task_id: taskId,
+                    progress: 10,
+                    glb_url: null,
+                    thumbnail_url: null,
+                    published: true,
+                    provider: 'meshy',
+                    last_updated: new Date().toISOString()
+                };
+
+                updateModel3DUI();
+                showToast("Geração 3D iniciada com sucesso! Acompanhando progresso...");
+                startMeshyPolling(taskId);
+
+            } catch (err) {
+                showToast("Erro ao iniciar 3D com Meshy: " + err.message, "error");
+                updateModel3DUI();
+            } finally {
+                if (icon) icon.innerText = "✨";
+            }
+        };
+
+        function startMeshyPolling(taskId) {
+            if (meshyPollInterval) clearInterval(meshyPollInterval);
+
+            const check = async () => {
+                try {
+                    const endpoint = `/.netlify/functions/meshy-status?id=${encodeURIComponent(taskId)}`;
+                    const res = await fetch(endpoint);
+                    if (!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.error || `Erro HTTP ${res.status}`);
+                    }
+                    const data = await res.json();
+
+                    if (data.status === 'SUCCEEDED') {
+                        clearInterval(meshyPollInterval);
+                        meshyPollInterval = null;
+                        modalProduct3D.status = 'succeeded';
+                        modalProduct3D.progress = 100;
+                        modalProduct3D.glb_url = data.glb_url || data.model_urls?.glb;
+                        modalProduct3D.thumbnail_url = data.thumbnail_url || null;
+                        modalProduct3D.last_updated = new Date().toISOString();
+                        updateModel3DUI();
+                        showToast("🎉 Modelo 3D concluído com sucesso!");
+                    } else if (data.status === 'FAILED') {
+                        clearInterval(meshyPollInterval);
+                        meshyPollInterval = null;
+                        modalProduct3D.status = 'failed';
+                        modalProduct3D.error_message = data.task_error?.message || 'Falha no processamento pela API Meshy';
+                        updateModel3DUI();
+                        showToast("Falha na geração 3D: " + modalProduct3D.error_message, "error");
+                    } else {
+                        // In progress
+                        modalProduct3D.status = 'processing';
+                        modalProduct3D.progress = Math.max(10, data.progress || 10);
+                        updateModel3DUI();
+                    }
+                } catch (e) {
+                    console.warn("Meshy poll check warning:", e);
+                }
+            };
+
+            // Primeira checagem imediata, depois a cada 4 segundos
+            check();
+            meshyPollInterval = setInterval(check, 4000);
+        }
+
+        // ==========================================
+        // ABERTURA, FECHAMENTO E SALVAMENTO DE PRODUTO
+        // ==========================================
+        window.openProductModal = (id = null) => {
+            const modal = document.getElementById('product-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            const titleEl = document.getElementById('product-modal-title');
+            if (id) {
+                titleEl.innerText = "Editar Produto";
+                const p = currentProducts.find(x => x.id === id);
+                document.getElementById('product-id').value = p.id;
+                document.getElementById('product-name').value = p.name;
+                document.getElementById('product-desc').value = p.description || '';
+                document.getElementById('product-price').value = p.price;
+                document.getElementById('product-link').value = p.link || '';
+
+                // Inicializar galeria
+                modalProductImages = (p.images && p.images.length > 0) 
+                    ? [...p.images] 
+                    : (p.image_url ? [p.image_url] : ['https://picsum.photos/seed/ebook/600/800']);
+                modalPrimaryImageIndex = typeof p.primary_image === 'number' ? p.primary_image : 0;
+
+                // Inicializar 3D
+                modalProduct3D = p.model_3d ? { ...p.model_3d } : {
+                    status: 'none',
+                    task_id: null,
+                    progress: 0,
+                    glb_url: null,
+                    thumbnail_url: null,
+                    published: true,
+                    error_message: null
+                };
+
+                // Se houver tarefa pendente/em andamento salva, retoma o polling
+                if (modalProduct3D.status === 'processing' && modalProduct3D.task_id) {
+                    startMeshyPolling(modalProduct3D.task_id);
+                }
+            } else {
+                titleEl.innerText = "Novo Produto";
+                document.getElementById('product-id').value = '';
+                document.getElementById('product-name').value = '';
+                document.getElementById('product-desc').value = '';
+                document.getElementById('product-price').value = '';
+                document.getElementById('product-link').value = '';
+
+                modalProductImages = ['https://picsum.photos/seed/ebook/600/800'];
+                modalPrimaryImageIndex = 0;
+                modalProduct3D = {
+                    status: 'none',
+                    task_id: null,
+                    progress: 0,
+                    glb_url: null,
+                    thumbnail_url: null,
+                    published: true,
+                    error_message: null
+                };
+            }
+
+            renderModalGallery();
+            updateModel3DUI();
+        };
+
+        window.closeProductModalAction = () => {
+            if (meshyPollInterval) {
+                clearInterval(meshyPollInterval);
+                meshyPollInterval = null;
+            }
+            destroyAdmin3DViewer();
+            closeModal('product-modal');
+        };
+
+        window.saveProductAction = async (btn) => {
+            const id = document.getElementById('product-id').value;
+            const name = document.getElementById('product-name').value.trim();
+            const desc = document.getElementById('product-desc').value.trim();
+            const priceVal = document.getElementById('product-price').value.replace(',', '.').trim();
+            const link = document.getElementById('product-link').value.trim();
+            const published3D = document.getElementById('model-3d-published-toggle')?.checked ?? true;
+
+            if (!name) {
+                showToast("O nome do produto é obrigatório.", "error");
+                return;
+            }
+
+            if (modalProductImages.length === 0) {
+                showToast("Adicione pelo menos uma imagem na galeria.", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Salvando...";
+
+            try {
+                // Atualiza flag de publicação do 3D
+                if (modalProduct3D) {
+                    modalProduct3D.published = published3D;
+                }
+
+                const primaryImg = modalProductImages[modalPrimaryImageIndex] || modalProductImages[0] || '';
+
+                const product = {
+                    name,
+                    description: desc,
+                    price: parseFloat(priceVal) || 0,
+                    image_url: primaryImg,
+                    images: modalProductImages,
+                    primary_image: modalPrimaryImageIndex,
+                    model_3d: modalProduct3D,
+                    link
+                };
+
+                if (id) product.id = id;
+                const saved = await saveProduct(product);
+
+                if (!id && saved && saved.id) {
+                    const order = currentProducts.map(p => p.id);
+                    if (!order.includes(saved.id)) {
+                        order.push(saved.id);
+                        currentContent['products_order'] = { content: JSON.stringify(order) };
+                        await updateSiteContent('products_order', JSON.stringify(order));
+                    }
+                }
+
+                closeProductModalAction();
+                showToast("Produto salvo com sucesso!");
+                await init();
+            } catch (e) {
+                showToast("Erro: " + e.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Salvar Produto";
+            }
+        };
+
+        // Modais de Serviços
         window.openServiceModal = (id = null) => {
             const modal = document.getElementById('service-modal');
             modal.classList.remove('hidden');
@@ -1462,38 +2525,12 @@
             }
         };
 
-        window.openProductModal = (id = null) => {
-            const modal = document.getElementById('product-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            const titleEl = document.getElementById('product-modal-title');
-            if (id) {
-                titleEl.innerText = "Editar Produto";
-                const p = currentProducts.find(x => x.id === id);
-                document.getElementById('product-id').value = p.id;
-                document.getElementById('product-name').value = p.name;
-                document.getElementById('product-desc').value = p.description || '';
-                document.getElementById('product-price').value = p.price;
-                document.getElementById('product-image').value = p.image_url || '';
-                document.getElementById('product-link').value = p.link || '';
-                updateProductImagePreview(p.image_url);
-            } else {
-                titleEl.innerText = "Novo Produto";
-                document.getElementById('product-id').value = '';
-                document.getElementById('product-name').value = '';
-                document.getElementById('product-desc').value = '';
-                document.getElementById('product-price').value = '';
-                document.getElementById('product-image').value = 'https://picsum.photos/seed/ebook/600/800';
-                document.getElementById('product-link').value = '';
-                updateProductImagePreview('https://picsum.photos/seed/ebook/600/800');
-            }
-        };
-
         window.closeModal = (id) => {
             const modal = document.getElementById(id);
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         };
 
         window.selectEmoji = (emoji) => {
@@ -1550,51 +2587,6 @@
                 } catch (e) {
                     showToast("Erro ao excluir: " + e.message, "error");
                 }
-            }
-        };
-
-        window.saveProductAction = async (btn) => {
-            const id = document.getElementById('product-id').value;
-            const name = document.getElementById('product-name').value.trim();
-            const desc = document.getElementById('product-desc').value.trim();
-            const priceVal = document.getElementById('product-price').value.replace(',', '.').trim();
-            const imageUrl = document.getElementById('product-image').value.trim();
-            const link = document.getElementById('product-link').value.trim();
-
-            if (!name) {
-                showToast("O nome do produto é obrigatório.", "error");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = "Salvando...";
-
-            try {
-                const product = {
-                    name,
-                    description: desc,
-                    price: parseFloat(priceVal) || 0,
-                    image_url: imageUrl,
-                    link
-                };
-                if (id) product.id = id;
-                const saved = await saveProduct(product);
-                if (!id && saved && saved.id) {
-                    const order = currentProducts.map(p => p.id);
-                    if (!order.includes(saved.id)) {
-                        order.push(saved.id);
-                        currentContent['products_order'] = { content: JSON.stringify(order) };
-                        await updateSiteContent('products_order', JSON.stringify(order));
-                    }
-                }
-                closeModal('product-modal');
-                showToast("Produto salvo com sucesso!");
-                await init();
-            } catch (e) {
-                showToast("Erro: " + e.message, "error");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Salvar Produto";
             }
         };
 

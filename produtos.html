@@ -16,7 +16,7 @@
         <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
     <!-- Header -->
-    <header class="fixed top-0 left-0 w-full z-[100] bg-black/40 backdrop-blur-md border-b border-white/5">
+    <header class="fixed top-0 left-0 w-full z-[100] bg-black/20 backdrop-blur-md border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="/" class="flex items-center gap-2 group">
                 <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center border border-blue-500/20 group-hover:rotate-12 transition-transform">
@@ -28,8 +28,10 @@
             </a>
             <nav class="hidden md:flex items-center gap-8">
                 <a href="/" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Home</a>
+                <a href="/#servicos" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Serviços</a>
+                <a href="/busca-dados.html" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Busca de Dados</a>
                 <a href="/produtos.html" class="text-xs font-bold uppercase tracking-widest text-white transition-colors">Produtos</a>
-                <a href="https://wa.me/5577999587570" target="_blank" class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link">Suporte</a>
+                <a href="https://wa.me/5577999587570" target="_blank" rel="noopener noreferrer" class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link">Suporte</a>
             </nav>
             <button id="mobile-menu-btn" class="md:hidden text-white p-2 focus:outline-none z-[110] relative">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -40,9 +42,10 @@
     <!-- Mobile Menu Overlay -->
     <div id="mobile-menu" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[105] flex flex-col items-center justify-center gap-8 transition-all duration-300 opacity-0 pointer-events-none">
         <a href="/" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Home</a>
+        <a href="/#servicos" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Serviços</a>
         <a href="/busca-dados.html" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Busca de Dados</a>
         <a href="/produtos.html" class="text-2xl font-black uppercase tracking-widest text-white hover:text-blue-500 transition-colors mobile-link">Produtos</a>
-        <a href="https://wa.me/5577999587570" target="_blank" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Suporte</a>
+        <a href="https://wa.me/5577999587570" target="_blank" rel="noopener noreferrer" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Suporte</a>
     </div>
 
     <main class="pt-40 pb-20 relative z-10">
@@ -68,8 +71,68 @@
         </section>
     </main>
 
+    <!-- PEQUENA TELA COM O PRODUTO EM 3D (Compact Floating Screen) -->
+    <div id="mini-3d-screen" class="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 transition-all duration-300">
+        <div class="w-full max-w-md bg-zinc-950/95 border border-white/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header Compacto -->
+            <div class="px-5 py-3.5 border-b border-white/10 flex items-center justify-between bg-black/60">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-500/40 text-blue-400 flex items-center justify-center text-xs font-black shrink-0">
+                        ✦
+                    </span>
+                    <div class="min-w-0">
+                        <h3 id="mini-3d-title" class="text-sm font-black text-white uppercase tracking-tight truncate">Produto em 3D</h3>
+                        <p id="mini-3d-price" class="text-xs font-bold text-emerald-400 font-mono">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" onclick="mini3DResetCamera()" title="Resetar Câmera" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white text-[10px] font-bold uppercase transition-colors cursor-pointer">
+                        Resetar
+                    </button>
+                    <button type="button" id="btn-mini-3d-rotate" onclick="mini3DToggleRotate()" title="Pausar / Continuar Giro" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase transition-colors cursor-pointer">
+                        Girar
+                    </button>
+                    <button type="button" onclick="closeMini3DScreen()" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer ml-1">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Viewport 3D da Pequena Tela -->
+            <div class="relative w-full h-[340px] sm:h-[380px] bg-gradient-to-b from-[#0c0c10] to-[#040406] overflow-hidden">
+                <!-- Canvas 3D -->
+                <div id="mini-3d-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></div>
+
+                <!-- Loading Indicator -->
+                <div id="mini-3d-loading" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm gap-2.5">
+                    <div class="w-9 h-9 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-[11px] font-black text-blue-400 tracking-wider uppercase">Carregando 3D...</span>
+                </div>
+
+                <!-- Dica discreta no rodapé do canvas -->
+                <div class="absolute bottom-3 left-3 z-10 pointer-events-none">
+                    <span class="text-[10px] text-zinc-400/80 bg-black/70 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-sm">
+                        Arraste para girar em 360° • Zoom
+                    </span>
+                </div>
+            </div>
+
+            <!-- Rodapé com Ação Rápida de Compra e Descrição -->
+            <div class="px-5 py-3 border-t border-white/10 bg-black/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] text-zinc-500 font-mono block">✦ Interativo 360°</span>
+                    <p id="mini-3d-desc" class="text-[11px] text-zinc-400 line-clamp-2 leading-tight mt-0.5 font-normal"></p>
+                </div>
+                <a id="mini-3d-buy-btn" href="#" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider text-xs rounded-xl shadow-lg shadow-blue-600/30 transition-all text-center shrink-0">
+                    Comprar Agora
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="py-20 px-6 border-t border-white/5 text-center relative z-10 bg-black/35 backdrop-blur-md">
+    <footer class="py-20 px-6 border-t border-white/5 text-center relative z-10 bg-black/15 backdrop-blur-sm">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col items-center gap-6">
                 <div class="flex items-center">

@@ -63,21 +63,42 @@ export async function fetchServices() {
   }
 }
 
+export function normalizeProduct(p) {
+  if (!p) return p;
+  const name = p.name || p.title || '';
+  const description = p.description || p.desc || p.details || '';
+  const images = Array.isArray(p.images) && p.images.length > 0
+    ? p.images
+    : (p.image_url ? [p.image_url] : []);
+  const primaryIdx = typeof p.primary_image === 'number' && p.primary_image >= 0 && p.primary_image < images.length
+    ? p.primary_image
+    : 0;
+  return {
+    ...p,
+    name,
+    description,
+    images,
+    primary_image: primaryIdx,
+    image_url: images[primaryIdx] || p.image_url || '',
+    model_3d: p.model_3d || null,
+  };
+}
+
 export async function fetchProducts() {
   if (!isConfigured()) {
-    return getLocalData(LOCAL_PRODUCTS_KEY, []);
+    return getLocalData(LOCAL_PRODUCTS_KEY, []).map(normalizeProduct);
   }
   try {
     const q = query(collection(db, 'products'), orderBy('created_at', 'asc'));
     const querySnapshot = await getDocs(q);
     const data = [];
     querySnapshot.forEach(docSnap => {
-      data.push({ id: docSnap.id, ...docSnap.data() });
+      data.push(normalizeProduct({ id: docSnap.id, ...docSnap.data() }));
     });
     return data;
   } catch (error) {
     console.warn("Error fetching products (Check Firestore rules):", error.message || error);
-    return getLocalData(LOCAL_PRODUCTS_KEY, []);
+    return getLocalData(LOCAL_PRODUCTS_KEY, []).map(normalizeProduct);
   }
 }
 
@@ -158,22 +179,23 @@ export async function saveProduct(product) {
   if (!product.id) {
     product.id = 'prod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
   }
+  const normalized = normalizeProduct(product);
   const products = getLocalData(LOCAL_PRODUCTS_KEY, []);
-  const idx = products.findIndex(p => p.id === product.id);
-  if (idx >= 0) products[idx] = product;
-  else products.push(product);
+  const idx = products.findIndex(p => p.id === normalized.id);
+  if (idx >= 0) products[idx] = normalized;
+  else products.push(normalized);
   setLocalData(LOCAL_PRODUCTS_KEY, products);
 
-  if (!isConfigured()) return;
+  if (!isConfigured()) return normalized;
 
   try {
-    const docRef = doc(db, 'products', product.id);
-    await setDoc(docRef, product, { merge: true });
+    const docRef = doc(db, 'products', normalized.id);
+    await setDoc(docRef, normalized, { merge: true });
   } catch (error) {
     console.error("Error saving product:", error);
     throw new Error("Erro de permissão no Firebase: " + error.message);
   }
-  return product;
+  return normalized;
 }
 
 export async function deleteProduct(id) {
@@ -264,4 +286,34 @@ export async function uploadImage(file, bucket = 'assets') {
   return await fileToBase64(file);
 }
 
+export async function upload3DModel(file, bucket = 'models3d') {
+  if (!file) throw new Error("Nenhum arquivo 3D fornecido.");
+  
+  // Se Firebase Storage estiver ativo, tenta persistir na nuvem
+  if (isConfigured() && storage) {
+    try {
+      const safeName = file.name ? file.name.replace(/[^a-zA-Z0-9.\-_]/g, '') : 'model.glb';
+      const fileName = `${Date.now()}-${safeName}`;
+      const storageRef = ref(storage, `${bucket}/${fileName}`);
+      
+      const uploadPromise = uploadBytes(storageRef, file, { contentType: 'model/gltf-binary' });
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Firebase Storage timeout")), 12000);
+      });
+      
+      await Promise.race([uploadPromise, timeoutPromise]);
+      const publicUrl = await getDownloadURL(storageRef);
+      return publicUrl;
+    } catch (error) {
+      console.warn("Firebase Storage indisponível para 3D. Convertendo arquivo localmente:", error.message || error);
+    }
+  }
 
+  // Fallback 100% gratuito: converter para Data URI base64
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (err) => reject(err);
+  });
+}

@@ -45,7 +45,7 @@
         <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
     <!-- Header -->
-    <header class="fixed top-0 left-0 w-full z-[100] bg-black/40 backdrop-blur-md border-b border-white/5">
+    <header class="fixed top-0 left-0 w-full z-[100] bg-black/20 backdrop-blur-md border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <a href="/" class="flex items-center gap-2 group">
                 <div class="relative w-10 h-10 rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center border border-blue-500/20 group-hover:rotate-12 transition-transform">
@@ -57,9 +57,10 @@
             </a>
             <nav class="hidden md:flex items-center gap-8">
                 <a href="/" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Home</a>
+                <a href="/#servicos" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Serviços</a>
                 <a href="/busca-dados.html" class="text-xs font-bold uppercase tracking-widest text-white transition-colors">Busca de Dados</a>
                 <a href="/produtos.html" class="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Produtos</a>
-                <a href="https://wa.me/5577999587570" target="_blank" class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link">Contato</a>
+                <a href="https://wa.me/5577999587570" target="_blank" rel="noopener noreferrer" class="px-6 py-2 rounded-full bg-blue-600 text-white text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link">Contato</a>
             </nav>
             <button id="mobile-menu-btn" class="md:hidden text-white p-2 focus:outline-none z-[110] relative">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -70,9 +71,10 @@
     <!-- Mobile Menu Overlay -->
     <div id="mobile-menu" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[105] flex flex-col items-center justify-center gap-8 transition-all duration-300 opacity-0 pointer-events-none">
         <a href="/" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Home</a>
+        <a href="/#servicos" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Serviços</a>
         <a href="/busca-dados.html" class="text-2xl font-black uppercase tracking-widest text-white hover:text-blue-500 transition-colors mobile-link">Busca de Dados</a>
         <a href="/produtos.html" class="text-2xl font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors mobile-link">Produtos</a>
-        <a href="https://wa.me/5577999587570" target="_blank" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Contato</a>
+        <a href="https://wa.me/5577999587570" target="_blank" rel="noopener noreferrer" class="px-8 py-4 mt-4 rounded-full bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 wa-link mobile-link">Contato</a>
     </div>
 
     <main class="flex-grow pt-40 pb-20 px-6 relative z-10">
@@ -171,7 +173,7 @@
         </div>
     </main>
 
-    <footer class="py-12 border-t border-white/5 text-center bg-black/35 backdrop-blur-md relative z-10">
+    <footer class="py-12 border-t border-white/5 text-center bg-black/15 backdrop-blur-sm relative z-10">
         <div class="max-w-7xl mx-auto px-6">
             <p class="text-zinc-500 text-xs mb-4 font-medium">Suporte Técnico: <span data-config-key="whatsapp">(77) 999587570</span> | Atendimento 24h</p>
             <p class="text-zinc-600 text-[10px] uppercase tracking-[0.3em]"><a href="/admin.html" class="hover:text-blue-500 transition-colors">&copy;</a> 2026 <span class="site-name">LESTEK</span> - TODOS OS DIREITOS RESERVADOS</p>
