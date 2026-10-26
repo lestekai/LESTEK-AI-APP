@@ -885,36 +885,40 @@
                         </label>
                     </div>
 
-                    <!-- CARD EM DESTAQUE: GERADOR 3D AUTOMÁTICO EMBUTIDO (100% GRATUITO NO NAVEGADOR) -->
+                    <!-- CARD EM DESTAQUE: GERADOR 3D AUTOMÁTICO EMBUTIDO (SEM FUNDO / 100% FUNCIONAL) -->
                     <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-950/70 via-indigo-950/50 to-black border border-blue-500/40 space-y-3.5 shadow-xl">
                         <div class="flex items-center justify-between flex-wrap gap-2">
                             <div class="flex items-center gap-2">
-                                <span class="text-blue-400 font-black text-xs uppercase tracking-wider">✦ Gerador 3D Automático Embutido</span>
-                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% Grátis no Navegador</span>
+                                <span class="text-blue-400 font-black text-xs uppercase tracking-wider">✦ Gerador 3D Automático (Sem Fundo)</span>
+                                <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">100% Funcional e Grátis</span>
                             </div>
-                            <span class="text-[10px] text-zinc-400 font-mono">Sem APIs • Sem Chaves • Instântaneo</span>
+                            <span class="text-[10px] text-zinc-400 font-mono">Processamento Direto no Navegador</span>
                         </div>
                         <p class="text-xs text-zinc-300 leading-relaxed">
-                            Cria o modelo 3D <strong class="text-white">.GLB</strong> interativo diretamente com Three.js usando as fotos enviadas. Após gerar, descarta automaticamente as imagens adicionais se desejado, mantendo somente a foto de capa.
+                            Cria o modelo 3D <strong class="text-white">.GLB</strong> interativo recortando o fundo automaticamente, para que <strong class="text-emerald-400">fique apenas o produto</strong> visível em 360°, com iluminação e profundidade real.
                         </p>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                             <div>
-                                <label class="input-label">Formato 3D do Produto (Form Factor)</label>
+                                <label class="input-label">Formato 3D do Produto</label>
                                 <select id="auto-3d-form-factor" class="input-dark !py-2 text-xs">
+                                    <option value="cutout" selected>✦ Silhueta do Produto (Apenas o Produto Sem Fundo)</option>
+                                    <option value="standee">Totem / Display Expositivo 3D</option>
                                     <option value="device">Dispositivo / Aparelho Tech (Smartphone/Tablet/Box)</option>
                                     <option value="box">Box / Embalagem Volumétrica</option>
                                     <option value="hardware">Hardware / Placa / Equipamento</option>
-                                    <option value="standee">Display / Totem Expositivo</option>
                                 </select>
                             </div>
 
                             <div class="space-y-1">
-                                <label class="input-label">Fotos de Referência para o 3D</label>
+                                <label class="input-label">Foto do Produto para o 3D</label>
                                 <div class="flex flex-col gap-1.5 text-[11px] text-zinc-300 bg-black/50 p-2.5 rounded-xl border border-white/10">
                                     <div class="flex items-center justify-between">
                                         <span>• Frontal:</span>
-                                        <span class="text-yellow-400 font-bold text-[10px]">Foto Principal ★ (Galeria)</span>
+                                        <input type="file" id="auto-3d-front-file" accept="image/*" class="hidden">
+                                        <button type="button" onclick="document.getElementById('auto-3d-front-file').click()" id="auto-3d-front-btn" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer">
+                                            Foto Principal ★ (ou clique p/ escolher outra)
+                                        </button>
                                     </div>
                                     <div class="flex items-center justify-between pt-1 border-t border-white/5">
                                         <span>• Verso (Opcional):</span>
@@ -934,16 +938,52 @@
                             </div>
                         </div>
 
+                        <!-- Opções de Remoção de Fundo -->
+                        <div class="p-3 bg-black/40 rounded-xl border border-white/5 space-y-2.5">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-white">
+                                    <input type="checkbox" id="auto-3d-remove-bg" checked class="rounded bg-zinc-900 border-white/20 text-blue-500 focus:ring-0 cursor-pointer">
+                                    <span class="text-emerald-400">✂️ Remover fundo da foto (Ficar apenas o produto)</span>
+                                </label>
+                                <div class="flex items-center gap-2 text-[11px] text-zinc-400">
+                                    <span>Sensibilidade:</span>
+                                    <input type="range" id="auto-3d-tolerance" min="15" max="65" value="32" oninput="document.getElementById('tolerance-val').innerText = this.value + '%'" class="w-20 accent-blue-500 cursor-pointer">
+                                    <span id="tolerance-val" class="font-mono text-white text-[10px]">32%</span>
+                                </div>
+                            </div>
+
+                            <!-- Preview do Recorte Sem Fundo -->
+                            <div id="cutout-preview-wrapper" class="hidden p-2.5 rounded-lg bg-zinc-950/80 border border-emerald-500/30 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-lg overflow-hidden border border-white/10 flex items-center justify-center p-1" style="background: repeating-conic-gradient(#18181b 0% 25%, #27272a 0% 50%) 50% / 10px 10px;">
+                                        <img id="cutout-preview-img" src="" class="max-w-full max-h-full object-contain">
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-emerald-400 block">✓ Fundo Removido (Transparente)</span>
+                                        <span class="text-[10px] text-zinc-400">Apenas o produto é projetado no espaço 3D.</span>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="applyCutoutAsCover()" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold transition-colors cursor-pointer">
+                                    Usar como Capa
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="flex items-center justify-between pt-2 gap-3 flex-wrap border-t border-white/10">
-                            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-200">
+                            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-300">
                                 <input type="checkbox" id="auto-3d-discard-photos" checked class="rounded bg-zinc-900 border-white/20 text-blue-500 focus:ring-0 cursor-pointer">
-                                <span>Descartar fotos adicionais após gerar o 3D (manter apenas foto de capa)</span>
+                                <span>Descartar fotos adicionais após gerar 3D (manter foto de capa)</span>
                             </label>
 
-                            <button type="button" id="btn-generate-auto-3d" onclick="generate3DModelFromPhotosAction()" class="w-full sm:w-auto py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                                <span id="btn-generate-auto-3d-icon">✦</span>
-                                <span id="btn-generate-auto-3d-label">Gerar Modelo 3D .GLB Agora</span>
-                            </button>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <button type="button" id="btn-download-3d" onclick="downloadCurrentGlbAction()" class="hidden py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-zinc-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <span>📥</span> Baixar .GLB
+                                </button>
+                                <button type="button" id="btn-generate-auto-3d" onclick="generate3DModelFromPhotosAction()" class="flex-1 sm:flex-initial py-2.5 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                    <span id="btn-generate-auto-3d-icon">✦</span>
+                                    <span id="btn-generate-auto-3d-label">Gerar Modelo 3D (Apenas o Produto)</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1934,6 +1974,15 @@
                 }
             }
 
+            const btnDownload = document.getElementById('btn-download-3d');
+            if (btnDownload) {
+                if (hasGlb) {
+                    btnDownload.classList.remove('hidden');
+                } else {
+                    btnDownload.classList.add('hidden');
+                }
+            }
+
             if (status === 'processing') {
                 if (statusBadge) {
                     statusBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30';
@@ -2142,8 +2191,17 @@
         // ==========================================
         // GERADOR 3D AUTOMÁTICO EMBUTIDO (THREE.JS / GLTFEXPORTER)
         // ==========================================
+        let auto3DFrontFile = null;
         let auto3DBackFile = null;
         let auto3DSideFile = null;
+        let lastGeneratedGlbBlob = null;
+        let lastGeneratedCutoutDataUrl = null;
+
+        document.getElementById('auto-3d-front-file')?.addEventListener('change', (e) => {
+            auto3DFrontFile = e.target.files?.[0] || null;
+            const btn = document.getElementById('auto-3d-front-btn');
+            if (btn) btn.innerText = auto3DFrontFile ? `✓ ${auto3DFrontFile.name}` : 'Foto Principal ★ (ou clique p/ escolher outra)';
+        });
 
         document.getElementById('auto-3d-back-file')?.addEventListener('change', (e) => {
             auto3DBackFile = e.target.files?.[0] || null;
@@ -2157,14 +2215,62 @@
             if (btn) btn.innerText = auto3DSideFile ? `✓ ${auto3DSideFile.name}` : '+ Selecionar Foto Lateral';
         });
 
-        window.generate3DModelFromPhotosAction = async () => {
+        window.applyCutoutAsCover = () => {
+            if (!lastGeneratedCutoutDataUrl) {
+                showToast("Nenhum recorte de produto sem fundo disponível.", "error");
+                return;
+            }
             if (modalProductImages.length === 0) {
-                showToast("Adicione pelo menos 1 foto na galeria do produto para servir de capa frontal.", "error");
+                modalProductImages = [lastGeneratedCutoutDataUrl];
+            } else {
+                modalProductImages[modalPrimaryImageIndex] = lastGeneratedCutoutDataUrl;
+            }
+            renderModalGallery();
+            showToast("Recorte do produto aplicado como capa principal!");
+        };
+
+        window.downloadCurrentGlbAction = () => {
+            const productName = document.getElementById('product-name')?.value.trim() || 'produto';
+            const fileName = `${productName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_3d.glb`;
+
+            if (lastGeneratedGlbBlob) {
+                const url = URL.createObjectURL(lastGeneratedGlbBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast("Download do arquivo .GLB iniciado!");
                 return;
             }
 
-            const frontImageUrl = modalProductImages[modalPrimaryImageIndex] || modalProductImages[0];
-            const formFactor = document.getElementById('auto-3d-form-factor')?.value || 'device';
+            if (modalProduct3D?.glb_url) {
+                const a = document.createElement('a');
+                a.href = modalProduct3D.glb_url;
+                a.download = modalProduct3D.file_name || fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast("Download do arquivo .GLB iniciado!");
+                return;
+            }
+
+            showToast("Nenhum modelo 3D disponível para download.", "error");
+        };
+
+        window.generate3DModelFromPhotosAction = async () => {
+            const frontSource = auto3DFrontFile || modalProductImages[modalPrimaryImageIndex] || modalProductImages[0];
+            if (!frontSource) {
+                showToast("Selecione uma foto para o produto (ou adicione à galeria) para gerar o 3D.", "error");
+                return;
+            }
+
+            const formFactor = document.getElementById('auto-3d-form-factor')?.value || 'cutout';
+            const removeBackground = document.getElementById('auto-3d-remove-bg')?.checked ?? true;
+            const tolerancePercent = parseInt(document.getElementById('auto-3d-tolerance')?.value || '32', 10);
+            const tolerance = tolerancePercent / 100;
             const productName = document.getElementById('product-name')?.value.trim() || 'produto';
             const discardPhotos = document.getElementById('auto-3d-discard-photos')?.checked ?? true;
 
@@ -2177,19 +2283,36 @@
 
             if (btn) btn.disabled = true;
             if (icon) icon.innerText = "⏳";
-            if (label) label.innerText = "Sintetizando 3D no navegador...";
+            if (label) label.innerText = "Removendo fundo e sintetizando 3D...";
 
             try {
                 const result = await buildGlbFromProductImages({
-                    frontImage: frontImageUrl,
+                    frontImage: frontSource,
                     backImage,
                     sideImage,
                     formFactor,
                     productName,
+                    removeBackground,
+                    tolerance,
                     onProgress: (step, pct) => {
                         if (label) label.innerText = `${step} (${pct}%)`;
                     }
                 });
+
+                lastGeneratedGlbBlob = result.blob;
+                lastGeneratedCutoutDataUrl = result.cutoutDataUrl;
+
+                // Exibir preview do recorte sem fundo se gerado
+                const cutoutWrapper = document.getElementById('cutout-preview-wrapper');
+                const cutoutImg = document.getElementById('cutout-preview-img');
+                if (cutoutWrapper && cutoutImg && result.cutoutDataUrl) {
+                    cutoutImg.src = result.cutoutDataUrl;
+                    cutoutWrapper.classList.remove('hidden');
+                }
+
+                // Exibir botão de download .GLB
+                const btnDownload = document.getElementById('btn-download-3d');
+                if (btnDownload) btnDownload.classList.remove('hidden');
 
                 const fileFromBlob = new File([result.blob], result.fileName, { type: 'model/gltf-binary' });
                 const modelUrl = await upload3DModel(fileFromBlob);
@@ -2197,36 +2320,40 @@
                 modalProduct3D = {
                     status: 'succeeded',
                     glb_url: modelUrl,
-                    thumbnail_url: frontImageUrl,
+                    thumbnail_url: result.cutoutDataUrl || (typeof frontSource === 'string' ? frontSource : null),
                     published: true,
                     provider: 'browser_auto_glb',
                     file_name: result.fileName,
                     last_updated: new Date().toISOString()
                 };
 
-                // Descartar fotos adicionais se marcado, mantendo apenas a foto principal de capa
+                // Descartar fotos adicionais se marcado, mantendo a foto do produto
                 if (discardPhotos) {
-                    modalProductImages = [frontImageUrl];
+                    const keepImage = result.cutoutDataUrl || (typeof frontSource === 'string' ? frontSource : modalProductImages[0]);
+                    modalProductImages = [keepImage];
                     modalPrimaryImageIndex = 0;
                     renderModalGallery();
                 }
 
+                auto3DFrontFile = null;
                 auto3DBackFile = null;
                 auto3DSideFile = null;
+                const frontBtn = document.getElementById('auto-3d-front-btn');
                 const backBtn = document.getElementById('auto-3d-back-btn');
                 const sideBtn = document.getElementById('auto-3d-side-btn');
+                if (frontBtn) frontBtn.innerText = 'Foto Principal ★ (ou clique p/ escolher outra)';
                 if (backBtn) backBtn.innerText = '+ Selecionar Foto Verso';
                 if (sideBtn) sideBtn.innerText = '+ Selecionar Foto Lateral';
 
                 updateModel3DUI();
-                showToast(`🎉 Modelo 3D .GLB gerado com sucesso! ${discardPhotos ? 'Fotos adicionais descartadas (mantida foto de capa).' : ''}`);
+                showToast(`🎉 Modelo 3D sem fundo gerado com sucesso! ${discardPhotos ? 'Fotos adicionais descartadas.' : ''}`);
             } catch (err) {
                 console.error("Error generating 3D model:", err);
                 showToast("Erro ao gerar modelo 3D no navegador: " + err.message, "error");
             } finally {
                 if (btn) btn.disabled = false;
                 if (icon) icon.innerText = "✦";
-                if (label) label.innerText = "Gerar Modelo 3D .GLB Agora";
+                if (label) label.innerText = "Gerar Modelo 3D (Apenas o Produto)";
             }
         };
 
@@ -2425,6 +2552,21 @@
                     error_message: null
                 };
             }
+            
+            // Limpar estados transitórios do gerador 3D
+            auto3DFrontFile = null;
+            auto3DBackFile = null;
+            auto3DSideFile = null;
+            lastGeneratedGlbBlob = null;
+            lastGeneratedCutoutDataUrl = null;
+            const cutoutWrapper = document.getElementById('cutout-preview-wrapper');
+            if (cutoutWrapper) cutoutWrapper.classList.add('hidden');
+            const frontBtn = document.getElementById('auto-3d-front-btn');
+            const backBtn = document.getElementById('auto-3d-back-btn');
+            const sideBtn = document.getElementById('auto-3d-side-btn');
+            if (frontBtn) frontBtn.innerText = 'Foto Principal ★ (ou clique p/ escolher outra)';
+            if (backBtn) backBtn.innerText = '+ Selecionar Foto Verso';
+            if (sideBtn) sideBtn.innerText = '+ Selecionar Foto Lateral';
 
             renderModalGallery();
             updateModel3DUI();

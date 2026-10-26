@@ -206,7 +206,13 @@ export function create3DViewer(options: Viewer3DOptions): Viewer3DInstance {
             const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
             mats.forEach((m) => {
               const matAny = m as any;
-              if (matAny.map) matAny.map.colorSpace = THREE.SRGBColorSpace;
+              if (matAny.map) {
+                matAny.map.colorSpace = THREE.SRGBColorSpace;
+                if (matAny.transparent || matAny.alphaTest > 0) {
+                  matAny.alphaTest = Math.max(matAny.alphaTest || 0, 0.05);
+                  matAny.depthWrite = true;
+                }
+              }
               if (m instanceof THREE.MeshStandardMaterial) {
                 m.roughness = Math.min(Math.max(m.roughness, 0.15), 0.95);
                 m.envMapIntensity = 1.0;

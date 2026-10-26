@@ -19,11 +19,93 @@ function getLocalData(key, fallback = {}) {
   }
 }
 
+// IndexedDB Store for large 3D models (.GLB) to prevent 5MB localStorage quota limits
+const IDB_NAME = 'lestek_3d_db';
+const IDB_STORE = 'models';
+
+function openModelDB() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      return reject(new Error('IndexedDB not supported'));
+    }
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function storeModelLocally(key, dataOrBlob) {
+  try {
+    const db = await openModelDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.put(dataOrBlob, key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.warn('IndexedDB store error:', e);
+  }
+}
+
+export async function getModelLocally(key) {
+  try {
+    const db = await openModelDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.get(key);
+      req.onsuccess = () => {
+        const res = req.result;
+        if (res instanceof Blob) {
+          resolve(URL.createObjectURL(res));
+        } else if (typeof res === 'string') {
+          resolve(res);
+        } else {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
 function setLocalData(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
-    console.warn("Error saving to localStorage:", e);
+    console.warn("Storage quota fallback triggered:", e);
+    // If it's products with large 3D glb_url strings, store them in IndexedDB and keep references in localStorage
+    if (key === LOCAL_PRODUCTS_KEY && Array.isArray(value)) {
+      const stripped = value.map(p => {
+        if (p.model_3d && p.model_3d.glb_url && p.model_3d.glb_url.startsWith('data:')) {
+          const modelKey = `model_${p.id}`;
+          storeModelLocally(modelKey, p.model_3d.glb_url);
+          return {
+            ...p,
+            model_3d: {
+              ...p.model_3d,
+              idb_key: modelKey
+            }
+          };
+        }
+        return p;
+      });
+      try {
+        localStorage.setItem(key, JSON.stringify(stripped));
+      } catch (err2) {
+        console.error("Critical storage error:", err2);
+      }
+    }
   }
 }
 
@@ -76,30 +158,47 @@ export function normalizeProduct(p) {
   return {
     ...p,
     name,
+    title: name,
     description,
+    desc: description,
     images,
     primary_image: primaryIdx,
     image_url: images[primaryIdx] || p.image_url || '',
+    image: images[primaryIdx] || p.image_url || '',
     model_3d: p.model_3d || null,
   };
 }
 
 export async function fetchProducts() {
+  let rawList = [];
   if (!isConfigured()) {
-    return getLocalData(LOCAL_PRODUCTS_KEY, []).map(normalizeProduct);
+    rawList = getLocalData(LOCAL_PRODUCTS_KEY, []).map(normalizeProduct);
+  } else {
+    try {
+      const q = query(collection(db, 'products'), orderBy('created_at', 'asc'));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(docSnap => {
+        rawList.push(normalizeProduct({ id: docSnap.id, ...docSnap.data() }));
+      });
+    } catch (error) {
+      console.warn("Error fetching products (Check Firestore rules):", error.message || error);
+      rawList = getLocalData(LOCAL_PRODUCTS_KEY, []).map(normalizeProduct);
+    }
   }
-  try {
-    const q = query(collection(db, 'products'), orderBy('created_at', 'asc'));
-    const querySnapshot = await getDocs(q);
-    const data = [];
-    querySnapshot.forEach(docSnap => {
-      data.push(normalizeProduct({ id: docSnap.id, ...docSnap.data() }));
-    });
-    return data;
-  } catch (error) {
-    console.warn("Error fetching products (Check Firestore rules):", error.message || error);
-    return getLocalData(LOCAL_PRODUCTS_KEY, []).map(normalizeProduct);
+
+  // Restore any IndexedDB cached 3D models if local storage quota stripped the glb_url
+  for (const p of rawList) {
+    if (p.model_3d && p.model_3d.idb_key && !p.model_3d.glb_url) {
+      try {
+        const idbUrl = await getModelLocally(p.model_3d.idb_key);
+        if (idbUrl) p.model_3d.glb_url = idbUrl;
+      } catch (e) {
+        console.warn("Error resolving IDB 3D model:", e);
+      }
+    }
   }
+
+  return rawList;
 }
 
 export async function updateSiteContent(section, content, image_url = undefined) {
@@ -309,11 +408,20 @@ export async function upload3DModel(file, bucket = 'models3d') {
     }
   }
 
-  // Fallback 100% gratuito: converter para Data URI base64
+  // Fallback 100% gratuito: converter para Data URI base64 e armazenar no IndexedDB
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
+    reader.onload = async () => {
+      const dataUri = reader.result;
+      try {
+        const idbKey = `model_blob_${Date.now()}`;
+        await storeModelLocally(idbKey, file);
+      } catch (err) {
+        console.warn("IndexedDB cache warning:", err);
+      }
+      resolve(dataUri);
+    };
     reader.onerror = (err) => reject(err);
   });
 }
