@@ -371,7 +371,7 @@ export async function uploadImage(file, bucket = 'assets') {
       // Use Promise.race to add a timeout for Firebase Storage upload
       const uploadPromise = uploadBytes(storageRef, file);
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Firebase Storage upload timeout")), 5000);
+        setTimeout(() => reject(new Error("Firebase Storage upload timeout")), 2500);
       });
       
       await Promise.race([uploadPromise, timeoutPromise]);

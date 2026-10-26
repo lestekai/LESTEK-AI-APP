@@ -27,14 +27,32 @@ export function escapeHtml(value) {
 export function sanitizeUrl(url, fallback = '#') {
     if (!url || typeof url !== 'string') return fallback;
     const trimmed = url.trim();
-    // Allow relative paths, absolute http/https, mailto and tel
-    if (/^(https?:\/\/|\/|mailto:|tel:)/i.test(trimmed)) {
-        // Block dangerous chars in query or payload
-        if (/^(javascript|vbscript|data):/i.test(trimmed)) {
-            return fallback;
-        }
+
+    // Block dangerous executable pseudo-protocols
+    if (/^(javascript|vbscript):/i.test(trimmed)) {
+        return fallback;
+    }
+
+    // Allow safe image Data URLs (PNG, JPEG, WEBP, GIF, SVG, AVIF)
+    if (/^data:image\/(png|jpe?g|webp|gif|svg\+xml|avif);base64,/i.test(trimmed)) {
         return trimmed;
     }
+
+    // Block any other dangerous or executable data URIs (e.g. data:text/html, data:application/javascript)
+    if (/^data:/i.test(trimmed)) {
+        return fallback;
+    }
+
+    // Allow blob URLs (e.g. generated in-browser)
+    if (/^blob:/i.test(trimmed)) {
+        return trimmed;
+    }
+
+    // Allow relative paths, absolute http/https, mailto and tel
+    if (/^(https?:\/\/|\/|\.\/|mailto:|tel:)/i.test(trimmed)) {
+        return trimmed;
+    }
+
     return fallback;
 }
 

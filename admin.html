@@ -1652,7 +1652,7 @@
                 const safeName = escapeHtml(p.name);
                 const safePrice = escapeHtml(p.price);
                 const safeDesc = escapeHtml(p.description || 'Sem descrição');
-                const safeImg = sanitizeUrl(p.image_url, 'https://picsum.photos/seed/ebook/600/800');
+                const safeImg = sanitizeUrl(p.image_url, p.image_url || 'https://picsum.photos/seed/ebook/600/800');
                 const safeId = escapeHtml(p.id);
 
                 const has3D = p.model_3d && p.model_3d.glb_url;
@@ -1663,7 +1663,7 @@
                     <div>
                         <div class="flex gap-3 items-center mb-3">
                             <div class="w-14 h-14 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/10 relative">
-                                <img src="${safeImg}" class="w-full h-full object-cover">
+                                <img src="${safeImg}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://picsum.photos/seed/ebook/600/800'">
                                 <span class="absolute top-1 left-1 text-[9px] font-mono font-black bg-black/80 px-1 rounded text-blue-400 border border-white/10">#${realIdx + 1}</span>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -1825,12 +1825,12 @@
                         : 'border-white/10 bg-zinc-900/60 hover:border-white/20'
                 }`;
 
-                const safeUrl = sanitizeUrl(url, 'https://picsum.photos/seed/ebook/600/800');
+                const safeUrl = sanitizeUrl(url, url);
                 const angleText = getAngleHint(idx);
 
                 card.innerHTML = `
                     <div class="aspect-square w-full relative bg-black/60 overflow-hidden flex items-center justify-center">
-                        <img src="${safeUrl}" class="w-full h-full object-cover">
+                        <img src="${safeUrl}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://picsum.photos/seed/ebook/600/800'">
                         <span class="absolute top-1.5 left-1.5 text-[9px] font-mono font-black px-1.5 py-0.5 rounded ${
                             isPrimary ? 'bg-yellow-500 text-black' : 'bg-black/80 text-white border border-white/10'
                         }">#${idx + 1}</span>
@@ -1909,6 +1909,10 @@
                 showToast("Informe uma URL de imagem válida.", "error");
                 return;
             }
+            if (modalProductImages.length === 1 && typeof modalProductImages[0] === 'string' && modalProductImages[0].includes('picsum.photos')) {
+                modalProductImages = [];
+                modalPrimaryImageIndex = 0;
+            }
             modalProductImages.push(val);
             input.value = '';
             renderModalGallery();
@@ -1925,6 +1929,12 @@
             if (progressBox) progressBox.classList.remove('hidden');
 
             try {
+                // Se a lista só continha o placeholder padrão, limpa para dar lugar às fotos reais do produto
+                if (modalProductImages.length === 1 && typeof modalProductImages[0] === 'string' && modalProductImages[0].includes('picsum.photos')) {
+                    modalProductImages = [];
+                    modalPrimaryImageIndex = 0;
+                }
+
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     if (statusText) statusText.innerText = `Processando foto ${i + 1} de ${files.length}...`;
@@ -1933,8 +1943,9 @@
                         modalProductImages.push(url);
                     }
                 }
-                showToast(`${files.length} foto(s) adicionada(s) à galeria!`);
+                showToast(`${files.length} foto(s) carregada(s) para visualização!`);
             } catch (err) {
+                console.error("Erro no upload de imagens:", err);
                 showToast("Erro no upload de imagens: " + err.message, "error");
             } finally {
                 if (progressBox) progressBox.classList.add('hidden');
@@ -2540,7 +2551,7 @@
                 document.getElementById('product-price').value = '';
                 document.getElementById('product-link').value = '';
 
-                modalProductImages = ['https://picsum.photos/seed/ebook/600/800'];
+                modalProductImages = [];
                 modalPrimaryImageIndex = 0;
                 modalProduct3D = {
                     status: 'none',

@@ -401,7 +401,8 @@ function renderEbooks() {
             const rawDesc = ebook.description || ebook.desc || ebook.details || '';
             const safeDesc = escapeHtml(rawDesc);
             const safePrice = escapeHtml(ebook.price);
-            const safeImage = sanitizeUrl(ebook.image, 'https://picsum.photos/seed/ebook/600/800');
+            const rawImg = ebook.image || ebook.image_url || (Array.isArray(ebook.images) && ebook.images[0]) || '';
+            const safeImage = sanitizeUrl(rawImg, rawImg || 'https://picsum.photos/seed/ebook/600/800');
             const targetUrl = (ebook.link && ebook.link !== '#') 
                 ? sanitizeUrl(ebook.link) 
                 : sanitizeUrl(window.getWhatsAppMessageLink(`Olá! Tenho interesse no produto: *${ebook.title || ebook.name}*`));
