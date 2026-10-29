@@ -397,7 +397,7 @@ export async function upload3DModel(file, bucket = 'models3d') {
       
       const uploadPromise = uploadBytes(storageRef, file, { contentType: 'model/gltf-binary' });
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Firebase Storage timeout")), 12000);
+        setTimeout(() => reject(new Error("Firebase Storage timeout")), 2000);
       });
       
       await Promise.race([uploadPromise, timeoutPromise]);

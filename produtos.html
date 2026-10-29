@@ -87,34 +87,44 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" onclick="mini3DResetCamera()" title="Resetar Câmera" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white text-[10px] font-bold uppercase transition-colors cursor-pointer">
-                        Resetar
-                    </button>
-                    <button type="button" id="btn-mini-3d-rotate" onclick="mini3DToggleRotate()" title="Pausar / Continuar Giro" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase transition-colors cursor-pointer">
-                        Girar
-                    </button>
+                    <span class="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10 hidden sm:inline">✦ Estúdio Simplio3D</span>
                     <button type="button" onclick="closeMini3DScreen()" class="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer ml-1">
                         ✕
                     </button>
                 </div>
             </div>
 
-            <!-- Viewport 3D da Pequena Tela -->
-            <div class="relative w-full h-[340px] sm:h-[380px] bg-gradient-to-b from-[#0c0c10] to-[#040406] overflow-hidden">
+            <!-- Viewport 3D da Pequena Tela (Simplio3D Studio) -->
+            <div class="relative w-full h-[360px] sm:h-[400px] overflow-hidden">
                 <!-- Canvas 3D -->
                 <div id="mini-3d-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></div>
 
                 <!-- Loading Indicator -->
-                <div id="mini-3d-loading" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm gap-2.5">
-                    <div class="w-9 h-9 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-[11px] font-black text-blue-400 tracking-wider uppercase">Carregando 3D...</span>
+                <div id="mini-3d-loading" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/75 backdrop-blur-sm gap-2.5">
+                    <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-[11px] font-black text-blue-400 tracking-wider uppercase">Carregando Estúdio 3D...</span>
                 </div>
 
-                <!-- Dica discreta no rodapé do canvas -->
-                <div class="absolute bottom-3 left-3 z-10 pointer-events-none">
-                    <span class="text-[10px] text-zinc-400/80 bg-black/70 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-sm">
-                        Arraste para girar em 360° • Zoom
-                    </span>
+                <!-- Barra de Ferramentas Simplio3D Flutuante (Bottom Toolbar) -->
+                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 p-1 rounded-2xl bg-black/80 backdrop-blur-md border border-white/20 shadow-2xl">
+                    <button type="button" onclick="mini3DToggleRotate()" id="btn-mini-3d-rotate" title="Girar 360°" class="p-1.5 px-2 rounded-xl text-blue-400 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer flex items-center gap-1">
+                        <span>🔄</span> <span class="text-[10px]">360°</span>
+                    </button>
+                    <button type="button" onclick="mini3DZoomIn()" title="Aproximar (Zoom In)" class="p-1.5 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer">
+                        <span>➕</span>
+                    </button>
+                    <button type="button" onclick="mini3DZoomOut()" title="Afastar (Zoom Out)" class="p-1.5 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer">
+                        <span>➖</span>
+                    </button>
+                    <button type="button" onclick="mini3DResetCamera()" title="Centralizar Câmera" class="p-1.5 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer">
+                        <span>🎯</span>
+                    </button>
+                    <button type="button" onclick="mini3DToggleTheme()" title="Trocar Iluminação (Escuro/Claro/Cyber)" class="p-1.5 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer">
+                        <span>💡</span>
+                    </button>
+                    <button type="button" onclick="mini3DToggleWireframe()" title="Alternar Malha 3D (Wireframe)" class="p-1.5 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer">
+                        <span>🔳</span>
+                    </button>
                 </div>
             </div>
 

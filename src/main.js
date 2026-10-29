@@ -348,10 +348,14 @@ window.mini3DToggleRotate = () => {
     const btn = document.getElementById('btn-mini-3d-rotate');
     if (btn) {
         btn.className = isRotating 
-            ? 'p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-blue-400 hover:text-blue-300 text-[10px] font-bold uppercase transition-colors cursor-pointer'
-            : 'p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white text-[10px] font-bold uppercase transition-colors cursor-pointer';
+            ? 'p-1.5 rounded-xl text-blue-400 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer flex items-center gap-1'
+            : 'p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer flex items-center gap-1';
     }
 };
+window.mini3DZoomIn = () => activeMiniViewer?.zoomIn();
+window.mini3DZoomOut = () => activeMiniViewer?.zoomOut();
+window.mini3DToggleTheme = () => activeMiniViewer?.toggleStudioTheme();
+window.mini3DToggleWireframe = () => activeMiniViewer?.toggleWireframe();
 
 // Fechar tela 3D ao pressionar ESC ou clicar fora
 if (typeof window !== 'undefined') {

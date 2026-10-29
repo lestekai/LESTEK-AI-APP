@@ -234,18 +234,6 @@ export async function buildGlbFromProductImages(options: GenerateGlbOptions): Pr
       coreMesh.scale.set(0.995, 0.995, 1);
       modelGroup.add(coreMesh);
     }
-
-    // Grounding Stand / Pedestal Base (Subtle tech anchor)
-    const baseGeo = new THREE.CylinderGeometry(targetWidth * 0.35, targetWidth * 0.4, 0.03, 32);
-    const baseMat = new THREE.MeshStandardMaterial({
-      color: 0x111116,
-      metalness: 0.85,
-      roughness: 0.2,
-    });
-    const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-    baseMesh.position.set(0, -targetHeight * 0.5 - 0.015, 0);
-    modelGroup.add(baseMesh);
-
   } else {
     // -------------------------------------------------------------
     // BOX / DEVICE / HARDWARE FORM FACTORS
