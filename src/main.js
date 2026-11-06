@@ -257,6 +257,7 @@ function renderServices() {
 let activeMiniViewer = null;
 
 window.openMini3DScreen = (productId) => {
+    window.activeMini3DProductId = productId;
     const config = getConfig();
     const ebooks = config.ebooks || defaultConfig.ebooks;
     const product = ebooks.find(p => p.id === productId);
@@ -374,6 +375,311 @@ if (typeof window !== 'undefined') {
     });
 }
 
+// ==========================================
+// COMPARTILHAMENTO SOCIAL & DEEP LINK DE PRODUTOS
+// ==========================================
+window.activeMini3DProductId = null;
+
+function getProductShareUrl(productId) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('produto', productId);
+    url.hash = `produto-${productId}`;
+    return url.toString();
+}
+
+function getProductShareData(productId) {
+    const config = getConfig();
+    const ebooks = config.ebooks || defaultConfig.ebooks;
+    const product = ebooks.find(p => p.id === productId || String(p.id) === String(productId));
+    const title = product?.title || product?.name || 'Produto LESTEK';
+    const price = product?.price ? `R$ ${product.price}` : '';
+    const shareUrl = getProductShareUrl(productId);
+    const text = `Confira este produto na LESTEK: *${title}* ${price ? `por apenas ${price}` : ''}! Acesse no link: ${shareUrl}`;
+    return { title, price, shareUrl, text, product };
+}
+
+function fallbackCopyText(text) {
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        return successful;
+    } catch (err) {
+        return false;
+    }
+}
+
+window.showShareToast = (message, type = 'success') => {
+    let toast = document.getElementById('lestek-share-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'lestek-share-toast';
+        toast.className = 'fixed bottom-6 right-6 z-[200] max-w-sm px-4 py-3 rounded-2xl bg-zinc-900/95 border border-white/20 text-white text-xs font-medium shadow-2xl backdrop-blur-xl flex items-center gap-2.5 transition-all duration-300 translate-y-10 opacity-0 pointer-events-none';
+        document.body.appendChild(toast);
+    }
+
+    const icon = type === 'success' ? '✓' : 'ℹ';
+    const iconColor = type === 'success' ? 'text-emerald-400' : 'text-blue-400';
+
+    toast.innerHTML = `
+        <span class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center font-bold ${iconColor} text-xs shrink-0">${icon}</span>
+        <span class="flex-1">${escapeHtml(message)}</span>
+    `;
+
+    toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    if (window._shareToastTimeout) clearTimeout(window._shareToastTimeout);
+    window._shareToastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 3500);
+};
+
+window.toggleSharePopover = (productId, event) => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const targetPopover = document.getElementById(`share-popover-${productId}`);
+    if (!targetPopover) return;
+    const isCurrentlyHidden = targetPopover.classList.contains('hidden');
+
+    window.closeAllSharePopovers();
+
+    if (isCurrentlyHidden) {
+        targetPopover.classList.remove('hidden');
+    }
+};
+
+window.closeAllSharePopovers = (event) => {
+    if (event) {
+        event.stopPropagation();
+    }
+    document.querySelectorAll('.share-popover-box').forEach(el => {
+        el.classList.add('hidden');
+    });
+};
+
+window.shareToSocial = async (network, productId, event) => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const data = getProductShareData(productId);
+    if (!data) return;
+
+    if (network === 'whatsapp') {
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.text)}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        window.showShareToast('Abrindo WhatsApp...');
+    } else if (network === 'facebook') {
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.shareUrl)}`;
+        window.open(fbUrl, '_blank', 'noopener,noreferrer,width=600,height=500');
+        window.showShareToast('Abrindo Facebook...');
+    } else if (network === 'twitter') {
+        const tweetText = `Confira ${data.title} na LESTEK! ${data.price ? `(${data.price})` : ''}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(data.shareUrl)}`;
+        window.open(twitterUrl, '_blank', 'noopener,noreferrer,width=600,height=500');
+        window.showShareToast('Abrindo X (Twitter)...');
+    } else if (network === 'instagram') {
+        let copied = false;
+        try {
+            await navigator.clipboard.writeText(data.text);
+            copied = true;
+        } catch (e) {
+            copied = fallbackCopyText(data.text);
+        }
+        window.showShareToast('Link e mensagem copiados! Cole nos Stories ou Direct do Instagram.', 'success');
+        setTimeout(() => {
+            window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+        }, 800);
+    } else if (network === 'native') {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: data.title,
+                    text: data.text,
+                    url: data.shareUrl
+                });
+            } catch (err) {
+                if (err && err.name !== 'AbortError') {
+                    window.showShareToast('Compartilhamento não disponível.');
+                }
+            }
+        }
+    }
+};
+
+window.copyProductLink = async (productId, event) => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const data = getProductShareData(productId);
+    if (!data) return;
+
+    let copied = false;
+    try {
+        await navigator.clipboard.writeText(data.shareUrl);
+        copied = true;
+    } catch (e) {
+        copied = fallbackCopyText(data.shareUrl);
+    }
+
+    if (copied) {
+        const btnLabel = document.getElementById(`btn-copy-label-${productId}`);
+        const btn = document.getElementById(`btn-copy-${productId}`);
+        if (btnLabel) btnLabel.innerText = '✓ Link Copiado!';
+        if (btn) btn.classList.add('!bg-emerald-600');
+        window.showShareToast('Link copiado para a área de transferência!', 'success');
+        setTimeout(() => {
+            if (btnLabel) btnLabel.innerText = 'Copiar Link Direto';
+            if (btn) btn.classList.remove('!bg-emerald-600');
+        }, 2500);
+    } else {
+        window.showShareToast('Não foi possível copiar o link automaticamente.', 'info');
+    }
+};
+
+window.shareCurrent3DProduct = (event) => {
+    if (!window.activeMini3DProductId) return;
+    const data = getProductShareData(window.activeMini3DProductId);
+    if (!data) return;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: data.title,
+            text: data.text,
+            url: data.shareUrl
+        }).catch(() => {
+            window.copyProductLink(window.activeMini3DProductId, event);
+        });
+    } else {
+        window.copyProductLink(window.activeMini3DProductId, event);
+    }
+};
+
+window.handleProductDeepLink = () => {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        let targetId = urlParams.get('produto');
+        if (!targetId && window.location.hash) {
+            targetId = window.location.hash.replace(/^#produto-/, '').replace(/^#/, '');
+        }
+        if (!targetId) return;
+
+        setTimeout(() => {
+            const card = document.getElementById(`product-card-${targetId}`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.classList.add('product-highlight-pulse');
+                window.showShareToast('Produto localizado na página!', 'success');
+                setTimeout(() => {
+                    card.classList.remove('product-highlight-pulse');
+                }, 4000);
+            }
+        }, 350);
+    } catch (e) {
+        console.warn("Deep link handler error:", e);
+    }
+};
+
+if (typeof window !== 'undefined') {
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.share-popover-box') && !e.target.closest('[class*="share-btn-"]')) {
+            window.closeAllSharePopovers();
+        }
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            window.closeAllSharePopovers();
+        }
+    });
+
+    window.addEventListener('hashchange', () => {
+        window.handleProductDeepLink();
+    });
+}
+
+function createSharePopoverHTML(safeId, safeTitle) {
+    return `
+        <!-- Botão Mini Aba de Compartilhamento -->
+        <div class="relative inline-block">
+            <button 
+                type="button" 
+                onclick="toggleSharePopover('${safeId}', event)" 
+                title="Compartilhar produto nas redes sociais"
+                class="share-btn-${safeId} w-10 h-10 rounded-xl bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95"
+                aria-label="Compartilhar produto"
+            >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+            </button>
+
+            <!-- Mini Aba Popover de Compartilhamento -->
+            <div id="share-popover-${safeId}" class="share-popover-box hidden absolute right-0 bottom-full mb-2 w-64 p-3 bg-zinc-950/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl z-40 text-left animate-in fade-in zoom-in-95 duration-150">
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        Compartilhar Produto
+                    </span>
+                    <button type="button" onclick="closeAllSharePopovers(event)" class="text-zinc-500 hover:text-white text-xs p-1 cursor-pointer">✕</button>
+                </div>
+
+                <div class="text-[10px] text-zinc-400 truncate bg-white/5 px-2 py-1 rounded-lg border border-white/5 mb-2 font-mono">
+                    ${safeTitle}
+                </div>
+
+                <div class="space-y-1.5">
+                    <button type="button" onclick="shareToSocial('whatsapp', '${safeId}', event)" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 text-xs font-bold transition-all text-left cursor-pointer">
+                        <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button type="button" onclick="shareToSocial('instagram', '${safeId}', event)" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-pink-300 border border-pink-500/20 hover:border-pink-500/40 text-xs font-bold transition-all text-left cursor-pointer">
+                        <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        <span>Instagram (Copiar & Abrir)</span>
+                    </button>
+                    <button type="button" onclick="shareToSocial('facebook', '${safeId}', event)" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 hover:border-blue-500/40 text-xs font-bold transition-all text-left cursor-pointer">
+                        <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+                        <span>Facebook</span>
+                    </button>
+                    <button type="button" onclick="shareToSocial('twitter', '${safeId}', event)" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-white/20 text-xs font-bold transition-all text-left cursor-pointer">
+                        <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        <span>X (Twitter)</span>
+                    </button>
+                </div>
+
+                <div class="pt-2 mt-2 border-t border-white/10 flex flex-col gap-1.5">
+                    <button type="button" id="btn-copy-${safeId}" onclick="copyProductLink('${safeId}', event)" class="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span id="btn-copy-label-${safeId}">Copiar Link Direto</span>
+                    </button>
+                    ${typeof navigator !== 'undefined' && navigator.share ? `
+                        <button type="button" onclick="shareToSocial('native', '${safeId}', event)" class="w-full py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-wider transition-colors text-center cursor-pointer">
+                            Mais opções do celular...
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function renderEbooks() {
     const grid = document.getElementById('ebooks-grid');
     if (grid) {
@@ -393,6 +699,10 @@ function renderEbooks() {
             const isFeatured = featuredProducts.includes(ebook.id);
             const card = document.createElement('div');
             
+            const rawId = ebook.id || (ebook.title ? ebook.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'prod');
+            const safeId = escapeHtml(rawId);
+            card.id = `product-card-${safeId}`;
+
             let cardClasses = 'group relative glass-card rounded-[2.5rem] overflow-hidden hover:border-blue-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 flex flex-col';
             if (isFeatured) {
                 cardClasses += ' md:col-span-2 lg:col-span-2 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.15)] md:flex-row';
@@ -400,7 +710,6 @@ function renderEbooks() {
             
             card.className = cardClasses;
             
-            const safeId = escapeHtml(ebook.id || '');
             const safeTitle = escapeHtml(ebook.title || ebook.name || '');
             const rawDesc = ebook.description || ebook.desc || ebook.details || '';
             const safeDesc = escapeHtml(rawDesc);
@@ -413,6 +722,7 @@ function renderEbooks() {
             const safeBtnText = escapeHtml(config.produtos_btn || defaultConfig.produtos_btn);
 
             const has3D = ebook.model_3d && ebook.model_3d.glb_url && ebook.model_3d.published !== false;
+            const shareComponentHtml = createSharePopoverHTML(safeId, safeTitle);
 
             let innerHTML = '';
             
@@ -448,7 +758,10 @@ function renderEbooks() {
                                 <span class="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Investimento</span>
                                 <span class="text-3xl font-black text-yellow-500 tracking-tighter">R$ ${safePrice}</span>
                             </div>
-                            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-8 py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20">${safeBtnText}</a>
+                            <div class="flex items-center gap-2.5">
+                                ${shareComponentHtml}
+                                <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-8 py-4 bg-yellow-500 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20 shrink-0">${safeBtnText}</a>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -482,7 +795,10 @@ function renderEbooks() {
                                 <span class="text-2xl font-black text-blue-500 tracking-tighter">R$ ${safePrice}</span>
                             </div>
 
-                            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-md">${safeBtnText}</a>
+                            <div class="flex items-center gap-2">
+                                ${shareComponentHtml}
+                                <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="px-6 py-3 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-md shrink-0">${safeBtnText}</a>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -696,6 +1012,7 @@ async function init() {
       loadSiteConfig();
       renderServices();
       renderEbooks();
+      window.handleProductDeepLink();
     } catch (e) {
       console.error("Error loading dynamic content:", e);
     }
@@ -715,6 +1032,9 @@ async function init() {
       generateLogo();
     }
   }
+
+  // Check product deep link once content is loaded
+  window.handleProductDeepLink();
 
   // Remove global loader
   const loader = document.getElementById('global-loader');
